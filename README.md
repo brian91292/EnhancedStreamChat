@@ -51,10 +51,14 @@ For the rest of the config options, you will have to manually edit the config fi
 | **TextColorR/G/B/A** | The color of chat messages, on a scale of 0-1. If your colors are between 0-255, just divide by 255 to get this value! |
 | **BackgroundColorR/G/B/A** | The color of the chat background, on a scale of 0-1. If your colors are between 0-255, just divide by 255 to get this value! |
 | **BackgroundPadding** | Determines how much empty space there will be around the borders of the chat. |
-| **LockChatPosition** | Whether or not the chat can be moved by pointing at it with the controller laser and gripping with the trigger. |
-| **ReverseChatOrder** | When set to true, chat messages will enter from the top and exit on bottom instead of entering on bottom and exiting on top. |
 | **AnimatedEmotes** | When set to false, animated emotes/cheermotes will not move at all. |
 | **DrawShadows** | When set to true, shadows will be drawn behind emotes/text (looks nicer in windowed view, not really noticeable in headset). |
+| **LockChatPosition** | Whether or not the chat can be moved by pointing at it with the controller laser and gripping with the trigger. |
+| **ReverseChatOrder** | When set to true, chat messages will enter from the top and exit on bottom instead of entering on bottom and exiting on top. |
+| **FilterCommandMessages** | When set to true, messages starting with ! won't be shown in chat. |
+| **FilterBroadcasterMessages** | When set to true, messages from the broadcaster won't be shown in chat. |
+| **FilterUserlistMessages** | When set to true, messages from users in `chatexclude.users` won't be shown in chat. |
+
 
 ### RequestBotSettings.ini
 | Option | Description |
