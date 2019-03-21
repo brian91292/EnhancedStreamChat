@@ -29,13 +29,18 @@ Most common options can be configured directly via the Beat Saber settings menu 
 ![Enhanced Twitch Chat settings menu](https://i.imgur.com/GSPmjPb.jpg)
 
 # Config
-For the rest of the config options, you will have to manually edit the config file (in UserData\EnhancedTwitchChat.ini).  *Keep in mind all config options will update in realtime when you save the file! This means you don't have to restart the game to see your changes!* Use the table below as a guide for setting these values (**NOTE:** The only required config option is TwitchChannelName):
+For the rest of the config options, you will have to manually edit the config files in the `UserData\EnhancedTwitchChat` folder.  *Keep in mind all config options will update in realtime when you save the file! This means you don't have to restart the game to see your changes!* Use the tables below as a guide for setting these values:
 
+### TwitchLoginInfo.ini
 | Option | Description |
 | - | - |
 | **TwitchChannelName** | The name of the Twitch channel whos chat you want to join (this is your Twitch username if you want to join your own channel) |
 | **TwitchUsername** | Your twitch username for the account you want to send messages as in chat (only matters if you're using the request bot) |
 | **TwitchOAuthToken** | The oauth token corresponding to the TwitchUsername entered above ([Click here to generate an oauth token](https://twitchapps.com/tmi/))  |
+
+### EnhancedTwitchChat.ini
+| Option | Description |
+| - | - |
 | **FontName** | The name of the system font that should be used for chat messages. You can specify any font installed on your computer! |
 | **ChatScale** | How large the chat messages/emotes should be displayed. |
 | **ChatWidth** | The width of the chat, regardless of ChatScale. |
@@ -50,11 +55,26 @@ For the rest of the config options, you will have to manually edit the config fi
 | **ReverseChatOrder** | When set to true, chat messages will enter from the top and exit on bottom instead of entering on bottom and exiting on top. |
 | **AnimatedEmotes** | When set to false, animated emotes/cheermotes will not move at all. |
 | **DrawShadows** | When set to true, shadows will be drawn behind emotes/text (looks nicer in windowed view, not really noticeable in headset). |
-| **SongRequestBot** | When set to true, users can make song requests in chat. |
-| **RequestCommandAliases** | The name(s) of the chat command(s) that you want to use for song requests. |
-| **RequestLimit** | The maximum number of requests a user can make within the amount of time defined in RequestCooldownMinutes. |
-| **RequestCooldownMinutes** | A user can make as many requests as are defined in RequestLimit within this amount of time. |
-| **SongBlacklist** | A list of BeatSaver ids that are not allowed to be requested. |
+
+### RequestBotSettings.ini
+| Option | Description |
+| - | - |
+| **RequestBotEnabled** | When set to true, the song request bot will be accessible, and chat commands will be parsed. |
+| **RequestQueueOpen** | When set to true, regular users can make song requests in chat (mods/broadcaster can make requests with queue closed). |
+| **PersistentRequestQueue** | Whether or not the history of previously played song requests will be saved when you restart the game. |
+| **RequestHistoryLimit** | The maximum number of requests to save a history of. |
+| **UserRequestLimit** | The maximum number of requests a regular chat user can have in queue at a time. |
+| **SubRequestLimit** | The maximum number of requests a subscriber can have in queue at a time. |
+| **ModRequestLimit** | The maximum number of requests a moderator can have in queue at a time. |
+| **VipBonusRequests** | Extra song requests for users with the VIP badge. |
+| **SessionResetAfterXHours** | After this many hours, the duplicate song list will be cleared (this means you won't be able to have a song requested more than once within this amount of hours). |
+| **LowestAllowedRating** | The minimum rating on BeatSaver to allow the song request to go through. Setting this value will allow for songs of any rating to be requested. |
+| **AutoPickFirstSong** | When set to true, the song request bot will automatically choose the first request that matches if there are multiple results. Otherwise, will ask the user to narrow down their search. |
+| **AllowModAddClosedQueue** | When set to true, moderators can add songs to the queue even when it is closed. |
+| **SendNextSongBeingPlayedtoChat** | When set to true, the request bot will send a message in chat with info about the song when you play it from the queue. |
+| **UpdateQueueStatusFiles** | When set to true, text files will be created and populated with information about the current request queue for use in streaming programs like OBS. |
+| **MaximumQueueTextEntries** | The max number of entries that will be written to the queue text file (described above). |
+| **BotPrefix** | A prefix that will be added to every message the bot sends to the chat, useful if you want to use a certain prefix to disable text to speech notifications for certain messages. |
 
 # Compiling
 To compile this mod simply clone the repo and update the project references to reference the corresponding assemblies in the `Beat Saber\Beat Saber_Data\Managed` folder, then compile. You may need to remove the post build event if your Beat Saber directory isn't at the same location as mine.
