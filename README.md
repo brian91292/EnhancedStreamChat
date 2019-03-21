@@ -71,7 +71,7 @@ For the rest of the config options, you will have to manually edit the config fi
 | **SubRequestLimit** | The maximum number of requests a subscriber can have in queue at a time. |
 | **ModRequestLimit** | The maximum number of requests a moderator can have in queue at a time. |
 | **VipBonusRequests** | Extra song requests for users with the VIP badge. |
-| **SessionResetAfterXHours** | After this many hours, the duplicate song list will be cleared (this means you won't be able to have a song requested more than once within this amount of hours). |
+| **SessionResetAfterXHours** | After this many hours, the duplicate/played song list will be cleared (this means you won't be able to have a song requested more than once within this amount of hours). |
 | **LowestAllowedRating** | The minimum rating on BeatSaver to allow the song request to go through. Setting this value will allow for songs of any rating to be requested. |
 | **AutoPickFirstSong** | When set to true, the song request bot will automatically choose the first request that matches if there are multiple results. Otherwise, will ask the user to narrow down their search. |
 | **AllowModAddClosedQueue** | When set to true, moderators can add songs to the queue even when it is closed. |
