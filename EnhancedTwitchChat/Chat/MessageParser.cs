@@ -263,7 +263,7 @@ namespace EnhancedTwitchChat.Textures
             newChatMessage.parsedEmotes = parsedEmotes;
             newChatMessage.parsedBadges = parsedBadges;
             newChatMessage.isActionMessage = isActionMessage;
-            TwitchWebSocketClient.RenderQueue.Enqueue(newChatMessage);
+            ChatHandler.RenderQueue.Enqueue(newChatMessage);
         }
 
     };

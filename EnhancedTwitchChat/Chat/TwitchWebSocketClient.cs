@@ -33,18 +33,16 @@ namespace EnhancedTwitchChat.Chat
     {
         private static readonly Regex _twitchMessageRegex = new Regex(@":(?<HostName>[\S]+) (?<MessageType>[\S]+) #(?<ChannelName>[\S]+)");
         private static readonly Regex _messageRegex = new Regex(@" #[\S]+ :(?<Message>.*)");
-        private static readonly Regex _tagRegex = new Regex(@"(?<Tag>[a-z,0-9,-]+)=(?<Value>[^;\s]+)");
 
-        private static Dictionary<string, Action<TwitchMessage, MatchCollection>> _messageHandlers = new Dictionary<string, Action<TwitchMessage, MatchCollection>>();
         private static Random _rand = new Random();
         private static WebSocket _ws;
 
-        public static bool Initialized = false;
-        public static ConcurrentQueue<ChatMessage> RenderQueue = new ConcurrentQueue<ChatMessage>();
-        public static Dictionary<string, TwitchRoom> ChannelInfo = new Dictionary<string, TwitchRoom>();
-        public static DateTime ConnectionTime;
+        public static bool Initialized { get; private set; } = false;
+        public static bool Connected { get; private set; } = false;
+        public static bool LoggedIn { get; private set; } = true;
+        public static DateTime ConnectionTime { get; private set; }
+        public static Dictionary<string, TwitchRoom> ChannelInfo { get; private set; } = new Dictionary<string, TwitchRoom>();
         public static TwitchUser OurTwitchUser = new TwitchUser("Request Bot");
-        public static bool LoggedIn = true;
         
         private static DateTime _sendLimitResetTime = DateTime.Now;
         private static Queue<string> _sendQueue = new Queue<string>();
@@ -70,20 +68,17 @@ namespace EnhancedTwitchChat.Chat
         
         public static void Initialize()
         {
-            // Initialize our message handlers
-            _messageHandlers.Add("PRIVMSG", MessageHandlers.PRIVMSG);
-            _messageHandlers.Add("ROOMSTATE", MessageHandlers.ROOMSTATE);
-            _messageHandlers.Add("USERNOTICE", MessageHandlers.USERNOTICE);
-            _messageHandlers.Add("USERSTATE", MessageHandlers.USERSTATE);
-            _messageHandlers.Add("CLEARCHAT", MessageHandlers.CLEARCHAT);
-            _messageHandlers.Add("CLEARMSG", MessageHandlers.CLEARMSG);
-            _messageHandlers.Add("MODE", MessageHandlers.MODE);
-            _messageHandlers.Add("JOIN", MessageHandlers.JOIN);
+            if (Initialized)
+                return;
+
+            MessageHandlers.Initialize();
 
             // Stop config updated callback when we haven't switched channels
             _lastChannel = TwitchLoginConfig.Instance.TwitchChannelName;
 
             TwitchLoginConfig.Instance.ConfigChangedEvent += Instance_ConfigChangedEvent;
+
+            Initialized = true;
 
             Connect();
         }
@@ -92,15 +87,15 @@ namespace EnhancedTwitchChat.Chat
         {
             LoggedIn = true;
 
-            if (Initialized)
+            if (Connected)
             {
                 if (TwitchLoginConfig.Instance.TwitchChannelName != _lastChannel)
                 {
                     if (_lastChannel != String.Empty)
-                        TwitchWebSocketClient.PartChannel(_lastChannel);
+                        PartChannel(_lastChannel);
                     if (TwitchLoginConfig.Instance.TwitchChannelName != String.Empty)
-                        TwitchWebSocketClient.JoinChannel(TwitchLoginConfig.Instance.TwitchChannelName);
-                    TwitchWebSocketClient.ConnectionTime = DateTime.Now;
+                        JoinChannel(TwitchLoginConfig.Instance.TwitchChannelName);
+                    ConnectionTime = DateTime.Now;
                     ChatHandler.Instance.displayStatusMessage = true;
                 }
                 _lastChannel = TwitchLoginConfig.Instance.TwitchChannelName;
@@ -109,9 +104,9 @@ namespace EnhancedTwitchChat.Chat
 
         public static void Shutdown()
         {
-            if (Initialized)
+            if (Connected)
             {
-                Initialized = false;
+                Connected = false;
                 if (_ws.IsConnected)
                     _ws.Close();
             }
@@ -168,19 +163,19 @@ namespace EnhancedTwitchChat.Chat
                         // Display a message in the chat informing the user whether or not the connection to the channel was successful
                         ConnectionTime = DateTime.Now;
                         ChatHandler.Instance.displayStatusMessage = true;
-                        Initialized = true;
+                        Connected = true;
                     };
 
                     _ws.OnClose += (sender, e) =>
                     {
                         Plugin.Log("Twitch connection terminated.");
-                        Initialized = false;
+                        Connected = false;
                     };
 
                     _ws.OnError += (sender, e) =>
                     {
                         Plugin.Log($"An error occured in the twitch connection! Error: {e.Message}, Exception: {e.Exception}");
-                        Initialized = false;
+                        Connected = false;
                     };
 
                     _ws.OnMessage += Ws_OnMessage;
@@ -193,7 +188,7 @@ namespace EnhancedTwitchChat.Chat
                     {
                         try
                         {
-                            while (Initialized && _ws.IsConnected)
+                            while (Connected && _ws.IsConnected)
                             {
                                 //Plugin.Log("Connected and alive!");
                                 Thread.Sleep(500);
@@ -316,13 +311,8 @@ namespace EnhancedTwitchChat.Chat
                 twitchMsg.hostString = messageType.Groups["HostName"].Value;
                 twitchMsg.messageType = messageType.Groups["MessageType"].Value;
                 twitchMsg.channelName = channelName;
-
-                // Find all the message tags
-                var tags = _tagRegex.Matches(rawMessage);
                 
-                // Call the appropriate handler for this messageType
-                if (_messageHandlers.ContainsKey(twitchMsg.messageType))
-                    _messageHandlers[twitchMsg.messageType]?.Invoke(twitchMsg, tags);
+                MessageHandlers.InvokeHandler(twitchMsg);
             }
             catch (Exception ex)
             {

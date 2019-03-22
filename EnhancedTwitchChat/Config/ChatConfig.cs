@@ -7,10 +7,6 @@ using System.IO;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
-#if REQUEST_BOT
-using EnhancedTwitchIntegration.Config;
-using EnhancedTwitchIntegration.Bot;
-#endif
 
 namespace EnhancedTwitchChat.Config
 {
@@ -178,18 +174,11 @@ namespace EnhancedTwitchChat.Config
                     TwitchLoginConfig.Instance.TwitchOAuthToken = semiOldConfigInfo.TwitchOAuthToken;
                     TwitchLoginConfig.Instance.Save(true);
 
-                    if (Plugin.Instance.RequestBotInstalled)
-                    {
-                        UpdateRequestBotConfig(ref semiOldConfigInfo);
-                    }
-                }
+                    var oldConfig = new OldBlacklistOption();
+                    ConfigSerializer.LoadConfig(oldConfig, FilePath);
 
-                if (Plugin.Instance.RequestBotInstalled)
-                {
-                    if (text.Contains("SongBlacklist="))
-                    {
-                        UpdateRequestBotBlacklist();
-                    }
+                    if (oldConfig.SongBlacklist.Length > 0)
+                        File.WriteAllText(Path.Combine("UserData", "EnhancedTwitchChat", "SongBlacklistMigration.list"), oldConfig.SongBlacklist);
                 }
             }
             CorrectConfigSettings();
@@ -202,26 +191,6 @@ namespace EnhancedTwitchChat.Config
                 EnableRaisingEvents = true
             };
             _configWatcher.Changed += ConfigWatcherOnChanged;
-        }
-
-        private void UpdateRequestBotBlacklist()
-        {
-#if REQUEST_BOT
-            var oldConfig = new OldBlacklistOption();
-            ConfigSerializer.LoadConfig(oldConfig, FilePath);
-
-            if (oldConfig.SongBlacklist.Length > 0)
-                SongBlacklist.ConvertFromList(oldConfig.SongBlacklist.Split(','));
-#endif
-        }
-
-        private void UpdateRequestBotConfig(ref SemiOldConfigOptions semiOldConfigInfo)
-        {
-#if REQUEST_BOT
-            RequestBotConfig.Instance.RequestBotEnabled = semiOldConfigInfo.SongRequestBot;
-            RequestBotConfig.Instance.PersistentRequestQueue = semiOldConfigInfo.PersistentRequestQueue;
-            RequestBotConfig.Instance.Save(true);
-#endif
         }
 
         ~ChatConfig()

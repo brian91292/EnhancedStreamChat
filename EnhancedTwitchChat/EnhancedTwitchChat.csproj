@@ -46,25 +46,11 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\..\..\..\steam\steamapps\common\Beat Saber\Plugins\BeatSaberCustomUI.dll</HintPath>
     </Reference>
-    <Reference Include="BeatSaverDownloader">
-      <HintPath>..\..\..\..\..\..\steam\steamapps\common\Beat Saber\Plugins\BeatSaverDownloader.dll</HintPath>
-    </Reference>
-    <Reference Include="EnhancedTwitchIntegration, Version=0.0.1.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Beat Saber\Plugins\EnhancedTwitchIntegration.dll</HintPath>
-    </Reference>
     <Reference Include="IllusionInjector, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\..\..\..\..\..\beatsaber\Beat Saber_Data\Managed\IllusionInjector.dll</HintPath>
     </Reference>
     <Reference Include="IllusionPlugin">
       <HintPath>..\..\..\..\..\..\beatsaber\Beat Saber_Data\Managed\IllusionPlugin.dll</HintPath>
-    </Reference>
-    <Reference Include="SongBrowserPlugin, Version=3.0.1.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Beat Saber\Plugins\SongBrowserPlugin.dll</HintPath>
-    </Reference>
-    <Reference Include="SongLoaderPlugin">
-      <HintPath>..\..\..\..\..\..\steam\steamapps\common\Beat Saber\Plugins\SongLoaderPlugin.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />

@@ -13,15 +13,14 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using VRUIControls;
 using EnhancedTwitchChat.Config;
-#if REQUEST_BOT
-using EnhancedTwitchIntegration.Bot;
-#endif
 
 namespace EnhancedTwitchChat
 {
     public class ChatHandler : MonoBehaviour
     {
         public static ChatHandler Instance = null;
+        public static ConcurrentQueue<ChatMessage> RenderQueue = new ConcurrentQueue<ChatMessage>();
+        public static Func<bool, TwitchMessage> ChatMessageFilters;
 
         public bool displayStatusMessage = false;
         public Image lockButtonImage;
@@ -131,7 +130,7 @@ namespace EnhancedTwitchChat
                 if (displayStatusMessage && (TwitchWebSocketClient.IsChannelValid || (DateTime.Now - TwitchWebSocketClient.ConnectionTime).TotalSeconds >= 5))
                 {
                     string msg;
-                    if (TwitchWebSocketClient.Initialized && TwitchWebSocketClient.LoggedIn)
+                    if (TwitchWebSocketClient.Connected && TwitchWebSocketClient.LoggedIn)
                     {
                         ImageDownloader.Instance.Init();
 
@@ -145,7 +144,7 @@ namespace EnhancedTwitchChat
                     else
                         msg = "Failed to login to Twitch! Please check your login info in UserData\\EnhancedTwitchChat\\TwitchLoginInfo.ini, then try again.";
                     
-                    TwitchWebSocketClient.RenderQueue.Enqueue(new ChatMessage(msg, new TwitchMessage()));
+                    RenderQueue.Enqueue(new ChatMessage(msg, new TwitchMessage()));
 
                     displayStatusMessage = false;
                 }
@@ -169,9 +168,9 @@ namespace EnhancedTwitchChat
                 //    return;
 
                 // Display any messages that we've cached all the resources for and prepared for rendering
-                if (TwitchWebSocketClient.RenderQueue.Count > 0 && !_messageRendering)
+                if (RenderQueue.Count > 0 && !_messageRendering)
                 {
-                    if (TwitchWebSocketClient.RenderQueue.TryDequeue(out var messageToSend))
+                    if (RenderQueue.TryDequeue(out var messageToSend))
                     {
                         if (ChatConfig.Instance.FilterBroadcasterMessages && messageToSend.twitchMessage.user.isBroadcaster)
                             return;
@@ -180,29 +179,31 @@ namespace EnhancedTwitchChat
 
                         if (ChatConfig.Instance.FilterUserlistMessages)
                         {
-                            if (Plugin.Instance.RequestBotInstalled)
+                            if(ChatMessageFilters != null)
                             {
-                                if (IsExcludedUser(messageToSend.twitchMessage.user)) return;
+                                foreach(var filter in ChatMessageFilters.GetInvocationList())
+                                {
+                                    try
+                                    {
+                                        var ret = (bool)filter?.DynamicInvoke(messageToSend.twitchMessage);
+                                        if(ret)
+                                            return;
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        Plugin.Log(ex.ToString());
+                                    }
+                                }
                             }
                         }
                         StartCoroutine(AddNewChatMessage(messageToSend.msg, messageToSend));
                     }
 
                 }
-
                 // Save images to file when we're at the main menu
                 else if (Plugin.Instance.IsAtMainMenu && ImageDownloader.ImageSaveQueue.Count > 0 && ImageDownloader.ImageSaveQueue.TryDequeue(out var saveInfo))
                     File.WriteAllBytes(saveInfo.path, saveInfo.data);
             }
-        }
-
-        private bool IsExcludedUser(TwitchUser user)
-        {
-#if REQUEST_BOT
-            string excludefilename = "chatexclude.users";
-            return RequestBot.Instance && RequestBot.listcollection.contains(ref excludefilename, user.displayName.ToLower(), RequestBot.ListFlags.Uncached);
-#endif
-            return false;
         }
 
         public void LateUpdate()

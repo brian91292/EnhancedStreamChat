@@ -2,10 +2,6 @@
 using EnhancedTwitchChat.Config;
 using EnhancedTwitchChat.Textures;
 using EnhancedTwitchChat.Utils;
-#if REQUEST_BOT
-using EnhancedTwitchIntegration.Bot;
-using EnhancedTwitchIntegration.Config;
-#endif
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,6 +13,69 @@ namespace EnhancedTwitchChat.Chat
 {
     class MessageHandlers
     {
+        private static readonly Regex _tagRegex = new Regex(@"(?<Tag>[a-z,0-9,-]+)=(?<Value>[^;\s]+)");
+
+        public static bool Initialized { get; private set; } = false;
+        private static Dictionary<string, Action<TwitchMessage, MatchCollection>> _messageHandlers = new Dictionary<string, Action<TwitchMessage, MatchCollection>>();
+
+        public static Action<TwitchMessage> PRIVMSG;
+        public static Action<TwitchMessage> ROOMSTATE;
+        public static Action<TwitchMessage> USERNOTICE;
+        public static Action<TwitchMessage> USERSTATE;
+        public static Action<TwitchMessage> CLEARCHAT;
+        public static Action<TwitchMessage> CLEARMSG;
+        public static Action<TwitchMessage> MODE;
+        public static Action<TwitchMessage> JOIN;
+
+        public static void Initialize()
+        {
+            if (Initialized)
+                return;
+
+            // Initialize our message handlers
+            _messageHandlers.Add("PRIVMSG", PRIVMSG_Handler);
+            _messageHandlers.Add("ROOMSTATE", ROOMSTATE_Handler);
+            _messageHandlers.Add("USERNOTICE", USERNOTICE_Handler);
+            _messageHandlers.Add("USERSTATE", USERSTATE_Handler);
+            _messageHandlers.Add("CLEARCHAT", CLEARCHAT_Handler);
+            _messageHandlers.Add("CLEARMSG", CLEARMSG_Handler);
+            _messageHandlers.Add("MODE", MODE_Handler);
+            _messageHandlers.Add("JOIN", JOIN_Handler);
+
+            Initialized = true;
+        }
+
+        public static bool InvokeHandler(TwitchMessage twitchMsg)
+        {
+            // Find all the message tags
+            var tags = _tagRegex.Matches(twitchMsg.rawMessage);
+
+            // Call the appropriate handler for this messageType
+            if (_messageHandlers.ContainsKey(twitchMsg.messageType))
+            {
+                _messageHandlers[twitchMsg.messageType]?.Invoke(twitchMsg, tags);
+                return true;
+            }
+            return false;
+        }
+
+        private static void SafeInvoke(Action<TwitchMessage> action, TwitchMessage message)
+        {
+            if (action == null) return;
+
+            foreach(var a in action.GetInvocationList())
+            {
+                try
+                {
+                    a?.DynamicInvoke(message);
+                }
+                catch(Exception ex)
+                {
+                    Plugin.Log(ex.ToString());
+                }
+            }
+        }
+
         private static void ParseRoomstateTag(Match t, string channel)
         {
             if (!TwitchWebSocketClient.ChannelInfo.ContainsKey(channel))
@@ -89,42 +148,35 @@ namespace EnhancedTwitchChat.Chat
             }
         }
 
-        public static void PRIVMSG(TwitchMessage twitchMsg, MatchCollection tags)
+        private static void PRIVMSG_Handler(TwitchMessage twitchMsg, MatchCollection tags)
         {
-            twitchMsg.user.displayName = twitchMsg.hostString.Split('!')[0];
+            twitchMsg.user.username = twitchMsg.hostString.Split('!')[0];
+            twitchMsg.user.displayName = twitchMsg.user.username;
             foreach (Match t in tags)
                 ParseMessageTag(t, ref twitchMsg);
 
             MessageParser.Parse(new ChatMessage(Utilities.StripHTML(twitchMsg.message), twitchMsg));
-            if (Plugin.Instance.RequestBotInstalled)
-            {
-                ParseRequestBot(twitchMsg);
-            }
+            SafeInvoke(PRIVMSG, twitchMsg);
         }
 
-        private static void ParseRequestBot(TwitchMessage twitchMsg)
-        {
-#if REQUEST_BOT
-            if (RequestBotConfig.Instance.RequestBotEnabled)
-                RequestBot.COMMAND.Parse(twitchMsg.user, twitchMsg.message);
-#endif
-        }
-
-        public static void JOIN(TwitchMessage twitchMsg, MatchCollection tags)
+        private static void JOIN_Handler(TwitchMessage twitchMsg, MatchCollection tags)
         {
             if (!TwitchWebSocketClient.ChannelInfo.ContainsKey(twitchMsg.channelName))
                 TwitchWebSocketClient.ChannelInfo.Add(twitchMsg.channelName, new TwitchRoom(twitchMsg.channelName));
 
             Plugin.Log($"Success joining channel #{twitchMsg.channelName} (RoomID: {twitchMsg.roomId})");
+            SafeInvoke(JOIN, twitchMsg);
         }
 
-        public static void ROOMSTATE(TwitchMessage twitchMsg, MatchCollection tags)
+        private static void ROOMSTATE_Handler(TwitchMessage twitchMsg, MatchCollection tags)
         {
             foreach (Match t in tags)
                 ParseRoomstateTag(t, twitchMsg.channelName);
+
+            SafeInvoke(ROOMSTATE, twitchMsg);
         }
 
-        public static void USERNOTICE(TwitchMessage twitchMsg, MatchCollection tags)
+        private static void USERNOTICE_Handler(TwitchMessage twitchMsg, MatchCollection tags)
         {
             foreach (Match t in tags)
                 ParseMessageTag(t, ref twitchMsg);
@@ -159,9 +211,10 @@ namespace EnhancedTwitchChat.Chat
                 case "ritual":
                     break;
             }
+            SafeInvoke(USERNOTICE, twitchMsg);
         }
 
-        public static void USERSTATE(TwitchMessage twitchMsg, MatchCollection tags)
+        private static void USERSTATE_Handler(TwitchMessage twitchMsg, MatchCollection tags)
         {
             foreach (Match t in tags)
                 ParseMessageTag(t, ref twitchMsg);
@@ -175,9 +228,10 @@ namespace EnhancedTwitchChat.Chat
                 tmpMessage.user.color = "FF0000FF";
                 MessageParser.Parse(new ChatMessage($"Twitch account {twitchMsg.user.displayName} is not a moderator of channel #{twitchMsg.channelName}. The default user rate limit is 20 messages per 30 seconds; to increase this limit to 100, grant this user moderator privileges.", tmpMessage));
             }
+            SafeInvoke(USERSTATE, twitchMsg);
         }
 
-        public static void CLEARCHAT(TwitchMessage twitchMsg, MatchCollection tags)
+        private static void CLEARCHAT_Handler(TwitchMessage twitchMsg, MatchCollection tags)
         {
             string userId = "!FULLCLEAR!";
             foreach (Match t in tags)
@@ -189,9 +243,10 @@ namespace EnhancedTwitchChat.Chat
                 }
             }
             ChatHandler.Instance.PurgeMessagesFromUser(userId);
+            SafeInvoke(CLEARCHAT, twitchMsg);
         }
 
-        public static void CLEARMSG(TwitchMessage twitchMsg, MatchCollection tags)
+        private static void CLEARMSG_Handler(TwitchMessage twitchMsg, MatchCollection tags)
         {
             string msgId = String.Empty;
             foreach (Match t in tags)
@@ -202,12 +257,16 @@ namespace EnhancedTwitchChat.Chat
                     break;
                 }
             }
+            if (msgId == String.Empty) return;
+
             ChatHandler.Instance.PurgeChatMessageById(msgId);
+            SafeInvoke(CLEARMSG, twitchMsg);
         }
-        
-        public static void MODE(TwitchMessage twitchMsg, MatchCollection tags)
+
+        private static void MODE_Handler(TwitchMessage twitchMsg, MatchCollection tags)
         {
             //Plugin.Log("MODE message received!");
+            SafeInvoke(MODE, twitchMsg);
         }
     }
 }

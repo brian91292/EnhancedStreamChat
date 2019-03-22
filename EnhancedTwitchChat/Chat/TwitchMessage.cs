@@ -38,6 +38,7 @@ namespace EnhancedTwitchChat.Chat
 
     public class TwitchUser
     {
+        public string username = "";
         public string displayName = "";
         public string id = "";
         public string color = "";
