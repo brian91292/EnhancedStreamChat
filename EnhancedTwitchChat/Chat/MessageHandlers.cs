@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace EnhancedTwitchChat.Chat
 {
-    class MessageHandlers
+    public class MessageHandlers
     {
         private static readonly Regex _tagRegex = new Regex(@"(?<Tag>[a-z,0-9,-]+)=(?<Value>[^;\s]+)");
 
