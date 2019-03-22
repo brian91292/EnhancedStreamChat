@@ -20,7 +20,7 @@ namespace EnhancedTwitchChat
     {
         public static ChatHandler Instance = null;
         public static ConcurrentQueue<ChatMessage> RenderQueue = new ConcurrentQueue<ChatMessage>();
-        public static Func<bool, TwitchMessage> ChatMessageFilters;
+        public static Func<TwitchMessage, bool> ChatMessageFilters;
 
         public bool displayStatusMessage = false;
         public Image lockButtonImage;
@@ -72,7 +72,7 @@ namespace EnhancedTwitchChat
             initialized = true;
             Plugin.Log("EnhancedTwitchChat initialized");
         }
-
+        
         public void SceneManager_activeSceneChanged(Scene from, Scene to)
         {
             var vrPointers = Resources.FindObjectsOfTypeAll<VRPointer>();

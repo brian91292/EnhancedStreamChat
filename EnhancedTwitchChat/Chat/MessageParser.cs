@@ -265,6 +265,5 @@ namespace EnhancedTwitchChat.Textures
             newChatMessage.isActionMessage = isActionMessage;
             ChatHandler.RenderQueue.Enqueue(newChatMessage);
         }
-
     };
 }
