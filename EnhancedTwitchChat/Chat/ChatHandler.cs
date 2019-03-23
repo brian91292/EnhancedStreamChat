@@ -177,22 +177,19 @@ namespace EnhancedTwitchChat
                         if (ChatConfig.Instance.FilterCommandMessages && messageToSend.twitchMessage.message.StartsWith("!"))
                             return;
 
-                        if (ChatConfig.Instance.FilterUserlistMessages)
+                        if (ChatMessageFilters != null)
                         {
-                            if(ChatMessageFilters != null)
+                            foreach (var filter in ChatMessageFilters.GetInvocationList())
                             {
-                                foreach(var filter in ChatMessageFilters.GetInvocationList())
+                                try
                                 {
-                                    try
-                                    {
-                                        var ret = (bool)filter?.DynamicInvoke(messageToSend.twitchMessage);
-                                        if(ret)
-                                            return;
-                                    }
-                                    catch (Exception ex)
-                                    {
-                                        Plugin.Log(ex.ToString());
-                                    }
+                                    var ret = (bool)filter?.DynamicInvoke(messageToSend.twitchMessage);
+                                    if (ret)
+                                        return;
+                                }
+                                catch (Exception ex)
+                                {
+                                    Plugin.Log(ex.ToString());
                                 }
                             }
                         }

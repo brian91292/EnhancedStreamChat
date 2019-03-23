@@ -66,6 +66,7 @@ namespace EnhancedTwitchChat.Config
         public bool DrawShadows = false;
         public bool LockChatPosition = false;
         public bool ReverseChatOrder = false;
+
         public bool FilterCommandMessages = false;
         public bool FilterBroadcasterMessages = false;
         public bool FilterUserlistMessages = true; // Filter messages in chatexclude.users ( pick a better name ) 
