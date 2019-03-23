@@ -178,7 +178,11 @@ namespace EnhancedTwitchChat.Config
                     ConfigSerializer.LoadConfig(oldConfig, FilePath);
 
                     if (oldConfig.SongBlacklist.Length > 0)
-                        File.WriteAllText(Path.Combine("UserData", "EnhancedTwitchChat", "SongBlacklistMigration.list"), oldConfig.SongBlacklist);
+                    {
+                        var blacklistMigrationFile = Path.Combine(Environment.CurrentDirectory, "UserData", "EnhancedTwitchChat", "SongBlacklistMigration.list");
+                        if(!File.Exists(blacklistMigrationFile))
+                            File.WriteAllText(blacklistMigrationFile, oldConfig.SongBlacklist);
+                    }
                 }
             }
             CorrectConfigSettings();
