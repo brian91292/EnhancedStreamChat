@@ -252,22 +252,28 @@ namespace EnhancedTwitchChat.Chat
             Plugin.Log("Exiting!");
         }
 
-        public static void SendMessage(string msg)
+        public static void SendRawMessage(string msg)
         {
             if (LoggedIn && _ws.ReadyState == WebSocketState.Open)
                 _sendQueue.Enqueue(msg);
         }
 
+        public static void SendMessage(string msg)
+        {
+            if (LoggedIn && _ws.ReadyState == WebSocketState.Open && msg.Length > 0)
+                _sendQueue.Enqueue($"PRIVMSG #{TwitchLoginConfig.Instance.TwitchChannelName} {(msg[0] == '/' ? "" : ":")}{msg}");
+        }
+        
         public static void JoinChannel(string channel)
         {
             if (LoggedIn && _ws.ReadyState == WebSocketState.Open)
-                SendMessage($"JOIN #{channel}");
+                SendRawMessage($"JOIN #{channel}");
         }
 
         public static void PartChannel(string channel)
         {
             if (LoggedIn && _ws.ReadyState == WebSocketState.Open)
-                SendMessage($"PART #{channel}");
+                SendRawMessage($"PART #{channel}");
         }
         
         private static void Ws_OnMessage(object sender, MessageEventArgs ev)
