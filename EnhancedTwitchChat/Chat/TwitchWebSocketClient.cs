@@ -145,7 +145,7 @@ namespace EnhancedTwitchChat.Chat
                     _ws.OnOpen += (sender, e) =>
                     {
                         // Reset our reconnect cooldown timer
-                        _reconnectCooldown = 500;
+                        _reconnectCooldown = 1000;
 
                         Plugin.Log("Connected to Twitch!");
                         _ws.Send("CAP REQ :twitch.tv/tags twitch.tv/commands twitch.tv/membership");
@@ -188,10 +188,21 @@ namespace EnhancedTwitchChat.Chat
                     {
                         try
                         {
+                            DateTime nextPing = DateTime.Now.AddSeconds(30);
                             while (Connected && _ws.IsConnected)
                             {
                                 //Plugin.Log("Connected and alive!");
                                 Thread.Sleep(500);
+
+                                if (nextPing < DateTime.Now)
+                                {
+                                    if (!_ws.IsAlive)
+                                    {
+                                        Plugin.Log("Ping failed, reconnecting!");
+                                        break;
+                                    }
+                                    nextPing = DateTime.Now.AddSeconds(30);
+                                }
                             }
                         }
                         catch(ThreadAbortException)
@@ -219,7 +230,7 @@ namespace EnhancedTwitchChat.Chat
             catch (Exception ex)
             {
                 Plugin.Log(ex.ToString());
-                Thread.Sleep(_reconnectCooldown *= 2);
+                Thread.Sleep(Math.Max(_reconnectCooldown *= 2, 120000));
                 Connect();
             }
         }
