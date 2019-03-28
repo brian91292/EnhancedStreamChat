@@ -1,7 +1,4 @@
-﻿//using EnhancedTwitchChat.Bot;
-using EnhancedTwitchChat.Config;
-using EnhancedTwitchChat.Textures;
-using EnhancedTwitchChat.Utils;
+﻿using StreamCore.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,14 +6,14 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-namespace EnhancedTwitchChat.Chat
+namespace StreamCore.Chat
 {
-    public class MessageHandlers
+    public class TwitchMessageHandlers
     {
         private static readonly Regex _tagRegex = new Regex(@"(?<Tag>[a-z,0-9,-]+)=(?<Value>[^;\s]+)");
 
         public static bool Initialized { get; private set; } = false;
-        private static Dictionary<string, Action<TwitchMessage, MatchCollection>> _messageHandlers = new Dictionary<string, Action<TwitchMessage, MatchCollection>>();
+        private static Dictionary<string, Action<TwitchMessage>> _messageHandlers = new Dictionary<string, Action<TwitchMessage>>();
 
         public static Action<TwitchMessage> PRIVMSG;
         public static Action<TwitchMessage> ROOMSTATE;
@@ -53,7 +50,8 @@ namespace EnhancedTwitchChat.Chat
             // Call the appropriate handler for this messageType
             if (_messageHandlers.ContainsKey(twitchMsg.messageType))
             {
-                _messageHandlers[twitchMsg.messageType]?.Invoke(twitchMsg, tags);
+                twitchMsg.tags = tags;
+                _messageHandlers[twitchMsg.messageType]?.Invoke(twitchMsg);
                 return true;
             }
             return false;
@@ -148,18 +146,17 @@ namespace EnhancedTwitchChat.Chat
             }
         }
 
-        private static void PRIVMSG_Handler(TwitchMessage twitchMsg, MatchCollection tags)
+        private static void PRIVMSG_Handler(TwitchMessage twitchMsg)
         {
             twitchMsg.user.username = twitchMsg.hostString.Split('!')[0];
             twitchMsg.user.displayName = twitchMsg.user.username;
-            foreach (Match t in tags)
+            foreach (Match t in twitchMsg.tags)
                 ParseMessageTag(t, ref twitchMsg);
-
-            MessageParser.Parse(new ChatMessage(Utilities.StripHTML(twitchMsg.message), twitchMsg));
+            
             SafeInvoke(PRIVMSG, twitchMsg);
         }
 
-        private static void JOIN_Handler(TwitchMessage twitchMsg, MatchCollection tags)
+        private static void JOIN_Handler(TwitchMessage twitchMsg)
         {
             if (!TwitchWebSocketClient.ChannelInfo.ContainsKey(twitchMsg.channelName))
                 TwitchWebSocketClient.ChannelInfo.Add(twitchMsg.channelName, new TwitchRoom(twitchMsg.channelName));
@@ -168,102 +165,43 @@ namespace EnhancedTwitchChat.Chat
             SafeInvoke(JOIN, twitchMsg);
         }
 
-        private static void ROOMSTATE_Handler(TwitchMessage twitchMsg, MatchCollection tags)
+        private static void ROOMSTATE_Handler(TwitchMessage twitchMsg)
         {
-            foreach (Match t in tags)
+            foreach (Match t in twitchMsg.tags)
                 ParseRoomstateTag(t, twitchMsg.channelName);
 
             SafeInvoke(ROOMSTATE, twitchMsg);
         }
 
-        private static void USERNOTICE_Handler(TwitchMessage twitchMsg, MatchCollection tags)
+        private static void USERNOTICE_Handler(TwitchMessage twitchMsg)
         {
-            foreach (Match t in tags)
+            foreach (Match t in twitchMsg.tags)
                 ParseMessageTag(t, ref twitchMsg);
 
-            string msgId = String.Empty, systemMsg = String.Empty;
-            foreach (Match t in tags)
-            {
-                switch (t.Groups["Tag"].Value)
-                {
-                    case "msg-id":
-                        msgId = t.Groups["Value"].Value;
-                        break;
-                    case "system-msg":
-                        systemMsg = t.Groups["Value"].Value.Replace("\\s", " ");
-                        break;
-                    default:
-                        break;
-                }
-            }
-            switch (msgId)
-            {
-                case "sub":
-                case "resub":
-                case "subgift":
-                case "anonsubgift":
-                    MessageParser.Parse(new ChatMessage($"{systemMsg.Substring(systemMsg.IndexOf(" ") + 1).Split(new char[] { '\n' }, 2)[0]}", twitchMsg));
-                    if (twitchMsg.message != String.Empty)
-                        MessageParser.Parse(new ChatMessage(twitchMsg.message, twitchMsg));
-                    break;
-                case "raid":
-                    break;
-                case "ritual":
-                    break;
-            }
             SafeInvoke(USERNOTICE, twitchMsg);
         }
 
-        private static void USERSTATE_Handler(TwitchMessage twitchMsg, MatchCollection tags)
+        private static void USERSTATE_Handler(TwitchMessage twitchMsg)
         {
-            foreach (Match t in tags)
+            foreach (Match t in twitchMsg.tags)
                 ParseMessageTag(t, ref twitchMsg);
 
             TwitchWebSocketClient.OurTwitchUser = twitchMsg.user;
 
-            if (!(twitchMsg.user.isBroadcaster || twitchMsg.user.isMod))
-            {
-                TwitchMessage tmpMessage = new TwitchMessage();
-                tmpMessage.user.displayName = "NOTICE";
-                tmpMessage.user.color = "FF0000FF";
-                MessageParser.Parse(new ChatMessage($"Twitch account {twitchMsg.user.displayName} is not a moderator of channel #{twitchMsg.channelName}. The default user rate limit is 20 messages per 30 seconds; to increase this limit to 100, grant this user moderator privileges.", tmpMessage));
-            }
             SafeInvoke(USERSTATE, twitchMsg);
         }
 
-        private static void CLEARCHAT_Handler(TwitchMessage twitchMsg, MatchCollection tags)
+        private static void CLEARCHAT_Handler(TwitchMessage twitchMsg)
         {
-            string userId = "!FULLCLEAR!";
-            foreach (Match t in tags)
-            {
-                if (t.Groups["Tag"].Value == "target-user-id")
-                {
-                    userId = t.Groups["target-user-id"].Value;
-                    break;
-                }
-            }
-            ChatHandler.Instance.PurgeMessagesFromUser(userId);
             SafeInvoke(CLEARCHAT, twitchMsg);
         }
 
-        private static void CLEARMSG_Handler(TwitchMessage twitchMsg, MatchCollection tags)
+        private static void CLEARMSG_Handler(TwitchMessage twitchMsg)
         {
-            string msgId = String.Empty;
-            foreach (Match t in tags)
-            {
-                if (t.Groups["Tag"].Value == "target-msg-id")
-                {
-                    msgId = t.Groups["target-msg-id"].Value;
-                    break;
-                }
-            }
-            if (msgId == String.Empty) return;
-
-            ChatHandler.Instance.PurgeChatMessageById(msgId);
             SafeInvoke(CLEARMSG, twitchMsg);
         }
 
-        private static void MODE_Handler(TwitchMessage twitchMsg, MatchCollection tags)
+        private static void MODE_Handler(TwitchMessage twitchMsg)
         {
             //Plugin.Log("MODE message received!");
             SafeInvoke(MODE, twitchMsg);

@@ -8,16 +8,20 @@ using System.Reflection;
 using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.UI;
-using EnhancedTwitchChat.Utils;
-using EnhancedTwitchChat.Chat;
+using EnhancedStreamChat.Chat;
 using UnityEngine.XR;
-using EnhancedTwitchChat.UI;
-using EnhancedTwitchChat.SimpleJSON;
+using EnhancedStreamChat.UI;
+using StreamCore.SimpleJSON;
 using System.Text.RegularExpressions;
 using CustomUI.Utilities;
-using EnhancedTwitchChat.Config;
+using EnhancedStreamChat.Config;
+using StreamCore;
+using EnhancedStreamChat.Images;
+using StreamCore.Utils;
+using StreamCore.Config;
+using StreamCore.Chat;
 
-namespace EnhancedTwitchChat.Textures
+namespace EnhancedStreamChat.Textures
 {
     public class CachedAnimationData
     {
@@ -49,28 +53,6 @@ namespace EnhancedTwitchChat.Textures
             this.sprite = sprite;
             this.width = width;
             this.height = height;
-        }
-    };
-
-    public enum ImageType
-    {
-        None,
-        Twitch,
-        BTTV,
-        BTTV_Animated,
-        FFZ,
-        Badge,
-        Emoji,
-        Cheermote
-    };
-
-    public class ImageTypeNames
-    {
-        private static string[] Names = new string[] { "None", "Twitch", "BetterTwitchTV", "BetterTwitchTV", "FrankerFaceZ", "Badges", "Emojis", "Cheermotes" };
-
-        public static string Get(ImageType type)
-        {
-            return Names[(int)type];
         }
     };
 
@@ -185,7 +167,7 @@ namespace EnhancedTwitchChat.Textures
         private static IEnumerator ProcessQueue()
         {
             var waitForEmote = new WaitUntil(() => Instance._imageDownloadQueue.Count > 0);
-            while(!Plugin.Instance.IsApplicationExiting)
+            while(!Globals.IsApplicationExiting)
             {
                 yield return waitForEmote;
 
@@ -217,7 +199,7 @@ namespace EnhancedTwitchChat.Textures
         private static IEnumerator ProcessAnimQueue()
         {
             var waitForAnimatedEmote = new WaitUntil(() => Instance._animationDownloadQueue.Count > 0);
-            while (!Plugin.Instance.IsApplicationExiting)
+            while (!Globals.IsApplicationExiting)
             {
                 yield return waitForAnimatedEmote;
                 // Download animated images separately, so we don't hold up static emotes while processing animations
@@ -229,7 +211,7 @@ namespace EnhancedTwitchChat.Textures
                             yield return DownloadAnimated($"https://cdn.betterttv.net/emote/{imageDownloadInfo.spriteIndex.Substring(2)}/3x", imageDownloadInfo);
                             break;
                         case ImageType.Cheermote:
-                            Match match = Utilities.cheermoteRegex.Match(imageDownloadInfo.spriteIndex);
+                            Match match = EmojiUtilities.cheermoteRegex.Match(imageDownloadInfo.spriteIndex);
                             yield return DownloadAnimated($"https://d3aqoihi2n8ty8.cloudfront.net/actions/{(match.Groups["Prefix"].Value)}/dark/animated/{(match.Groups["Value"].Value)}/4.gif", imageDownloadInfo);
                             break;
                     }
@@ -307,7 +289,7 @@ namespace EnhancedTwitchChat.Textures
                     });
                 }
                 else
-                    sprite = UIUtilities.LoadSpriteFromResources($"EnhancedTwitchChat.Resources.Emojis.{imageDownloadInfo.spriteIndex.ToLower()}");
+                    sprite = UIUtilities.LoadSpriteFromResources($"EnhancedStreamChat.Resources.Emojis.{imageDownloadInfo.spriteIndex.ToLower()}");
 
                 if (sprite)
                 {
@@ -325,8 +307,8 @@ namespace EnhancedTwitchChat.Textures
             int count = 0;
             foreach (string emoteIndex in BTTVAnimatedEmoteIDs.Values)
             {
-                if (!Plugin.Instance.IsAtMainMenu)
-                    yield return new WaitUntil(() => Plugin.Instance.IsAtMainMenu);
+                if (!Globals.IsAtMainMenu)
+                    yield return new WaitUntil(() => Globals.IsAtMainMenu);
 
                 if (!CachedTextures.ContainsKey(emoteIndex))
                 {

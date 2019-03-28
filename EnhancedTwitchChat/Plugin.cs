@@ -4,99 +4,75 @@ using System.IO;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using IllusionPlugin;
-using EnhancedTwitchChat.Chat;
-using EnhancedTwitchChat.UI;
+using EnhancedStreamChat.Chat;
+using EnhancedStreamChat.UI;
 using System.Threading.Tasks;
 using System.Collections;
 using CustomUI.BeatSaber;
 //using EnhancedTwitchChat.Bot;
 using System.Runtime.CompilerServices;
 using TMPro;
-using EnhancedTwitchChat.Config;
-using EnhancedTwitchChat.Utils;
+using EnhancedStreamChat.Config;
+using StreamCore.Chat;
 
-namespace EnhancedTwitchChat
+namespace EnhancedStreamChat
 {
     public class Plugin : IPlugin
     {
-        public string Name => "EnhancedTwitchChat";
+        public static readonly string ModuleName = "EnhancedStreamChat";
+        public string Name => ModuleName;
         public string Version => "1.2.0-beta6";
-
-        public bool IsAtMainMenu = true;
-        public bool IsApplicationExiting = false;
-        public bool RequestBotInstalled = false;
-
+        
         public static Plugin Instance { get; private set; }
 
         private ChatConfig ChatConfig;
-        private TwitchLoginConfig TwitchLoginConfig;
 
         public static void Log(string text,
                         [CallerFilePath] string file = "",
                         [CallerMemberName] string member = "",
                         [CallerLineNumber] int line = 0)
         {
-            Console.WriteLine($"[EnhancedTwitchChat] {DateTime.UtcNow} {Path.GetFileName(file)}->{member}({line}): {text}");
+            Console.WriteLine($"[{ModuleName}] {DateTime.UtcNow} {Path.GetFileName(file)}->{member}({line}): {text}");
         }
         
         public void OnApplicationStart()
         {
             if (Instance != null) return;
             Instance = this;
-
-            TwitchLoginConfig = new TwitchLoginConfig();
+            
             ChatConfig = new ChatConfig();
+
+            TwitchWebSocketClient.Initialize();
 
             SharedCoroutineStarter.instance.StartCoroutine(DelayedStartup());
         }
-
-        #if OLDVERSION
-        static string MenuSceneName = "Menu";
-        #else
-        static string MenuSceneName = "MenuCore";
-        #endif
 
         private IEnumerator DelayedStartup()
         {
             yield return new WaitForSeconds(0.5f);
 
-            RequestBotInstalled = Utilities.IsModInstalled("EnhancedTwitchIntegration");
-
             ChatHandler.OnLoad();
-            Task.Run(() => TwitchWebSocketClient.Initialize());
 
             SceneManager.activeSceneChanged += SceneManager_activeSceneChanged;
             SceneManager.sceneLoaded += SceneManager_sceneLoaded;
-
-            yield return new WaitUntil(() => SceneManager.GetActiveScene().name == MenuSceneName);
-            if (TwitchLoginConfig.Instance.TwitchChannelName == String.Empty)
-                yield return new WaitUntil(() => BeatSaberUI.DisplayKeyboard("Enter Your Twitch Channel Name!", String.Empty, null, (channelName) => { TwitchLoginConfig.Instance.TwitchChannelName = channelName; TwitchLoginConfig.Instance.Save(true); }));
         }
         
         private void SceneManager_sceneLoaded(Scene arg0, LoadSceneMode arg1)
         {
-            if (arg0.name == MenuSceneName)
+            if (arg0.name == "MenuCore")
             {
                 Settings.OnLoad();
 
                 ChatConfig.Save(true);
-                TwitchLoginConfig.Save(true);
             }
         }
 
         public void OnApplicationQuit()
         {
-            IsApplicationExiting = true;
-            TwitchWebSocketClient.Shutdown();
         }
 
         private void SceneManager_activeSceneChanged(Scene from, Scene to)
         {
-            if (to.name == MenuSceneName)
-                IsAtMainMenu = true;
-            else if (to.name == "GameCore")
-                IsAtMainMenu = false;
-
             try
             {
                 ChatHandler.Instance?.SceneManager_activeSceneChanged(from, to);

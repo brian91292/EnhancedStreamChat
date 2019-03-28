@@ -6,17 +6,19 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
-using EnhancedTwitchChat.Utils;
-using EnhancedTwitchChat.Chat;
-using EnhancedTwitchChat.Textures;
+using EnhancedStreamChat.Chat;
+using EnhancedStreamChat.Textures;
 using System.Collections;
 using static POCs.Sanjay.SharpSnippets.Drawing.ColorExtensions;
 using Random = System.Random;
 using CustomUI.Utilities;
 using System.Reflection;
-using EnhancedTwitchChat.Config;
+using EnhancedStreamChat.Config;
+using EnhancedStreamChat.Images;
+using StreamCore;
+using StreamCore.Chat;
 
-namespace EnhancedTwitchChat.UI
+namespace EnhancedStreamChat.UI
 {
     public class CustomImage : Image
     {
@@ -98,7 +100,7 @@ namespace EnhancedTwitchChat.UI
             get
             {
                 if(!_assets)
-                    _assets = AssetBundle.LoadFromMemory(UIUtilities.GetResource(Assembly.GetExecutingAssembly(), "EnhancedTwitchChat.Resources.Assets"));
+                    _assets = AssetBundle.LoadFromMemory(UIUtilities.GetResource(Assembly.GetExecutingAssembly(), "EnhancedStreamChat.Resources.Assets"));
                 return _assets;
             }
         }
@@ -212,7 +214,7 @@ namespace EnhancedTwitchChat.UI
                 return;
 
             bool animatedEmote = cachedTextureData.animInfo != null;
-            foreach (int i in Utilities.IndexOfAll(currentMessage.text, Char.ConvertFromUtf32(imageInfo.swapChar)))
+            foreach (int i in EmojiUtilities.IndexOfAll(currentMessage.text, Char.ConvertFromUtf32(imageInfo.swapChar)))
             {
                 CustomImage image = null, shadow = null;
                 try

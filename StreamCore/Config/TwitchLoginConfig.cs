@@ -1,4 +1,5 @@
-﻿using EnhancedTwitchChat.SimpleJSON;
+﻿using StreamCore.SimpleJSON;
+using StreamCore.Utils;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -6,11 +7,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace EnhancedTwitchChat.Config
+namespace StreamCore.Config
 {
     public class TwitchLoginConfig
     {
-        private string FilePath = Path.Combine(Environment.CurrentDirectory, "UserData", "EnhancedTwitchChat", "TwitchLoginInfo.ini");
+        private string FilePath = Path.Combine(Globals.DataPath, $"{Plugin.ModuleName}.ini");
 
         public string TwitchChannelName = "";
         public string TwitchUsername = "";
@@ -41,6 +42,10 @@ namespace EnhancedTwitchChat.Config
         {
             Instance = this;
 
+            string oldDataPath = Path.Combine(Environment.CurrentDirectory, "UserData", "EnhancedTwitchChat");
+            if (Directory.Exists(oldDataPath) && !Directory.Exists(Globals.DataPath))
+                Directory.Move(oldDataPath, Globals.DataPath);
+
             if (!Directory.Exists(Path.GetDirectoryName(FilePath)))
                 Directory.CreateDirectory(Path.GetDirectoryName(FilePath));
 
@@ -67,7 +72,10 @@ namespace EnhancedTwitchChat.Config
 
         public void Load()
         {
-            ConfigSerializer.LoadConfig(this, FilePath);
+            if(File.Exists(FilePath))
+                ConfigSerializer.LoadConfig(this, FilePath);
+            else
+                ImportAsyncTwitchConfig();
 
             CorrectConfigSettings();
         }
@@ -106,8 +114,6 @@ namespace EnhancedTwitchChat.Config
 
         private void CorrectConfigSettings()
         {
-            ImportAsyncTwitchConfig();
-
             if (TwitchOAuthToken != String.Empty && !TwitchOAuthToken.StartsWith("oauth:"))
                 TwitchOAuthToken = "oauth:" + TwitchOAuthToken;
 

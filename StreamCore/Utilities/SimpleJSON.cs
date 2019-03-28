@@ -111,7 +111,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace EnhancedTwitchChat.SimpleJSON
+namespace StreamCore.SimpleJSON
 {
     public enum JSONNodeType {
         Array = 1,

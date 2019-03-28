@@ -1,5 +1,4 @@
-﻿using EnhancedTwitchChat.UI;
-using EnhancedTwitchChat.Utils;
+﻿using EnhancedStreamChat.UI;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -9,7 +8,7 @@ using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.XR;
 
-namespace EnhancedTwitchChat.Textures
+namespace EnhancedStreamChat.Textures
 {
     class AnimControllerData
     {

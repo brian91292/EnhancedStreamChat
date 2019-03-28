@@ -1,0 +1,203 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{9C2D1AEF-CCB9-4BDE-B294-9D06D24AE4DB}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>StreamCore</RootNamespace>
+    <AssemblyName>StreamCore</AssemblyName>
+    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Assembly-CSharp">
+      <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Beat Saber\Beat Saber_Data\Managed\Assembly-CSharp.dll</HintPath>
+    </Reference>
+    <Reference Include="BeatSaberCustomUI">
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Beat Saber\Plugins\BeatSaberCustomUI.dll</HintPath>
+    </Reference>
+    <Reference Include="IllusionInjector">
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Beat Saber\Beat Saber_Data\Managed\IllusionInjector.dll</HintPath>
+    </Reference>
+    <Reference Include="IllusionPlugin">
+      <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Beat Saber\Beat Saber_Data\Managed\IllusionPlugin.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.IO.Compression" />
+    <Reference Include="System.IO.Compression.FileSystem" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+    <Reference Include="UnityEngine">
+      <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Beat Saber\Beat Saber_Data\Managed\UnityEngine.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Beat Saber\Beat Saber_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.ImageConversionModule">
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Beat Saber\Beat Saber_Data\Managed\UnityEngine.ImageConversionModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.IMGUIModule">
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Beat Saber\Beat Saber_Data\Managed\UnityEngine.IMGUIModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UI">
+      <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Beat Saber\Beat Saber_Data\Managed\UnityEngine.UI.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UIElementsModule">
+      <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Beat Saber\Beat Saber_Data\Managed\UnityEngine.UIElementsModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UIModule">
+      <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Beat Saber\Beat Saber_Data\Managed\UnityEngine.UIModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UnityWebRequestAssetBundleModule">
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Beat Saber\Beat Saber_Data\Managed\UnityEngine.UnityWebRequestAssetBundleModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UnityWebRequestAudioModule">
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Beat Saber\Beat Saber_Data\Managed\UnityEngine.UnityWebRequestAudioModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UnityWebRequestModule">
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Beat Saber\Beat Saber_Data\Managed\UnityEngine.UnityWebRequestModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UnityWebRequestTextureModule">
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Beat Saber\Beat Saber_Data\Managed\UnityEngine.UnityWebRequestTextureModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UnityWebRequestWWWModule">
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Beat Saber\Beat Saber_Data\Managed\UnityEngine.UnityWebRequestWWWModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.VRModule">
+      <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Beat Saber\Beat Saber_Data\Managed\UnityEngine.VRModule.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Chat\ChatMessageBase.cs" />
+    <Compile Include="Chat\ChatUserBase.cs" />
+    <Compile Include="Chat\Twitch\TwitchMessageHandlers.cs" />
+    <Compile Include="Chat\Twitch\TwitchRoom.cs" />
+    <Compile Include="Chat\Twitch\TwitchMessage.cs" />
+    <Compile Include="Chat\Twitch\TwitchUser.cs" />
+    <Compile Include="Chat\Twitch\TwitchWebSocketClient.cs" />
+    <Compile Include="Chat\websocket-sharp\ByteOrder.cs" />
+    <Compile Include="Chat\websocket-sharp\CloseEventArgs.cs" />
+    <Compile Include="Chat\websocket-sharp\CloseStatusCode.cs" />
+    <Compile Include="Chat\websocket-sharp\CompressionMethod.cs" />
+    <Compile Include="Chat\websocket-sharp\ErrorEventArgs.cs" />
+    <Compile Include="Chat\websocket-sharp\Ext.cs" />
+    <Compile Include="Chat\websocket-sharp\Fin.cs" />
+    <Compile Include="Chat\websocket-sharp\HttpBase.cs" />
+    <Compile Include="Chat\websocket-sharp\HttpRequest.cs" />
+    <Compile Include="Chat\websocket-sharp\HttpResponse.cs" />
+    <Compile Include="Chat\websocket-sharp\LogData.cs" />
+    <Compile Include="Chat\websocket-sharp\Logger.cs" />
+    <Compile Include="Chat\websocket-sharp\LogLevel.cs" />
+    <Compile Include="Chat\websocket-sharp\Mask.cs" />
+    <Compile Include="Chat\websocket-sharp\MessageEventArgs.cs" />
+    <Compile Include="Chat\websocket-sharp\Net\AuthenticationBase.cs" />
+    <Compile Include="Chat\websocket-sharp\Net\AuthenticationChallenge.cs" />
+    <Compile Include="Chat\websocket-sharp\Net\AuthenticationResponse.cs" />
+    <Compile Include="Chat\websocket-sharp\Net\AuthenticationSchemes.cs" />
+    <Compile Include="Chat\websocket-sharp\Net\Chunk.cs" />
+    <Compile Include="Chat\websocket-sharp\Net\ChunkedRequestStream.cs" />
+    <Compile Include="Chat\websocket-sharp\Net\ChunkStream.cs" />
+    <Compile Include="Chat\websocket-sharp\Net\ClientSslConfiguration.cs" />
+    <Compile Include="Chat\websocket-sharp\Net\Cookie.cs" />
+    <Compile Include="Chat\websocket-sharp\Net\CookieCollection.cs" />
+    <Compile Include="Chat\websocket-sharp\Net\CookieException.cs" />
+    <Compile Include="Chat\websocket-sharp\Net\EndPointListener.cs" />
+    <Compile Include="Chat\websocket-sharp\Net\EndPointManager.cs" />
+    <Compile Include="Chat\websocket-sharp\Net\HttpBasicIdentity.cs" />
+    <Compile Include="Chat\websocket-sharp\Net\HttpConnection.cs" />
+    <Compile Include="Chat\websocket-sharp\Net\HttpDigestIdentity.cs" />
+    <Compile Include="Chat\websocket-sharp\Net\HttpHeaderInfo.cs" />
+    <Compile Include="Chat\websocket-sharp\Net\HttpHeaderType.cs" />
+    <Compile Include="Chat\websocket-sharp\Net\HttpListener.cs" />
+    <Compile Include="Chat\websocket-sharp\Net\HttpListenerAsyncResult.cs" />
+    <Compile Include="Chat\websocket-sharp\Net\HttpListenerContext.cs" />
+    <Compile Include="Chat\websocket-sharp\Net\HttpListenerException.cs" />
+    <Compile Include="Chat\websocket-sharp\Net\HttpListenerPrefix.cs" />
+    <Compile Include="Chat\websocket-sharp\Net\HttpListenerPrefixCollection.cs" />
+    <Compile Include="Chat\websocket-sharp\Net\HttpListenerRequest.cs" />
+    <Compile Include="Chat\websocket-sharp\Net\HttpListenerResponse.cs" />
+    <Compile Include="Chat\websocket-sharp\Net\HttpRequestHeader.cs" />
+    <Compile Include="Chat\websocket-sharp\Net\HttpResponseHeader.cs" />
+    <Compile Include="Chat\websocket-sharp\Net\HttpStatusCode.cs" />
+    <Compile Include="Chat\websocket-sharp\Net\HttpStreamAsyncResult.cs" />
+    <Compile Include="Chat\websocket-sharp\Net\HttpUtility.cs" />
+    <Compile Include="Chat\websocket-sharp\Net\HttpVersion.cs" />
+    <Compile Include="Chat\websocket-sharp\Net\InputChunkState.cs" />
+    <Compile Include="Chat\websocket-sharp\Net\InputState.cs" />
+    <Compile Include="Chat\websocket-sharp\Net\LineState.cs" />
+    <Compile Include="Chat\websocket-sharp\Net\NetworkCredential.cs" />
+    <Compile Include="Chat\websocket-sharp\Net\QueryStringCollection.cs" />
+    <Compile Include="Chat\websocket-sharp\Net\ReadBufferState.cs" />
+    <Compile Include="Chat\websocket-sharp\Net\RequestStream.cs" />
+    <Compile Include="Chat\websocket-sharp\Net\ResponseStream.cs" />
+    <Compile Include="Chat\websocket-sharp\Net\ServerSslConfiguration.cs" />
+    <Compile Include="Chat\websocket-sharp\Net\WebHeaderCollection.cs" />
+    <Compile Include="Chat\websocket-sharp\Net\WebSockets\HttpListenerWebSocketContext.cs" />
+    <Compile Include="Chat\websocket-sharp\Net\WebSockets\TcpListenerWebSocketContext.cs" />
+    <Compile Include="Chat\websocket-sharp\Net\WebSockets\WebSocketContext.cs" />
+    <Compile Include="Chat\websocket-sharp\Opcode.cs" />
+    <Compile Include="Chat\websocket-sharp\PayloadData.cs" />
+    <Compile Include="Chat\websocket-sharp\Rsv.cs" />
+    <Compile Include="Chat\websocket-sharp\Server\HttpRequestEventArgs.cs" />
+    <Compile Include="Chat\websocket-sharp\Server\HttpServer.cs" />
+    <Compile Include="Chat\websocket-sharp\Server\IWebSocketSession.cs" />
+    <Compile Include="Chat\websocket-sharp\Server\ServerState.cs" />
+    <Compile Include="Chat\websocket-sharp\Server\WebSocketBehavior.cs" />
+    <Compile Include="Chat\websocket-sharp\Server\WebSocketServer.cs" />
+    <Compile Include="Chat\websocket-sharp\Server\WebSocketServiceHost.cs" />
+    <Compile Include="Chat\websocket-sharp\Server\WebSocketServiceHost`1.cs" />
+    <Compile Include="Chat\websocket-sharp\Server\WebSocketServiceManager.cs" />
+    <Compile Include="Chat\websocket-sharp\Server\WebSocketSessionManager.cs" />
+    <Compile Include="Chat\websocket-sharp\WebSocket.cs" />
+    <Compile Include="Chat\websocket-sharp\WebSocketException.cs" />
+    <Compile Include="Chat\websocket-sharp\WebSocketFrame.cs" />
+    <Compile Include="Chat\websocket-sharp\WebSocketState.cs" />
+    <Compile Include="Config\TwitchLoginConfig.cs" />
+    <Compile Include="Globals.cs" />
+    <Compile Include="Plugin.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Utilities\ObjectPool.cs" />
+    <Compile Include="Utilities\ReflectionUtil.cs" />
+    <Compile Include="Utilities\SimpleJSON.cs" />
+    <Compile Include="Utilities\Utilities.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Chat\websocket-sharp\doc\.gitignore" />
+    <None Include="Chat\websocket-sharp\doc\doc.sh" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PreBuildEvent>"$(ProjectDir)..\..\PluginVersionSetter.exe" "$(ProjectDir)Properties\AssemblyInfo.cs" "$(ProjectDir)Plugin.cs"</PreBuildEvent>
+  </PropertyGroup>
+  <PropertyGroup>
+    <PostBuildEvent>copy /Y "$(TargetDir)$(TargetFileName)" "C:\Program Files (x86)\Steam\steamapps\common\Beat Saber\Plugins"
+::copy /Y "$(TargetDir)$(TargetFileName)" "C:\Beat Saber\Plugins"</PostBuildEvent>
+  </PropertyGroup>
+</Project>

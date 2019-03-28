@@ -10,12 +10,13 @@ using System.Text;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using System.Threading.Tasks;
-using EnhancedTwitchChat.Chat;
-using EnhancedTwitchChat.Config;
+using EnhancedStreamChat.Chat;
+using EnhancedStreamChat.Config;
 //using EnhancedTwitchIntegration.Config;
 using System.IO;
+using StreamCore.Config;
 
-namespace EnhancedTwitchChat.UI
+namespace EnhancedStreamChat.UI
 {
     public class Settings
     {
@@ -37,12 +38,12 @@ namespace EnhancedTwitchChat.UI
 
         public static void OnLoad()
         {
-            var reconnectButton = MenuButtonUI.AddButton("Reconnect to Twitch", "Click this button if your twitch chat stops working, and hopefully with some luck it will fix it.", () =>
-            {
-                Task.Run(() => TwitchWebSocketClient.Connect(true));
-            });
+            //var reconnectButton = MenuButtonUI.AddButton("Reconnect to Twitch", "Click this button if your twitch chat stops working, and hopefully with some luck it will fix it.", () =>
+            //{
+            //    Task.Run(() => TwitchWebSocketClient.Connect(true));
+            //});
 
-            MenuButtonUI.AddButton("Restart Game", () => { System.Diagnostics.Process.Start(Path.Combine(Environment.CurrentDirectory, System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName), Environment.CommandLine); Application.Quit(); });
+            //MenuButtonUI.AddButton("Restart Game", () => { System.Diagnostics.Process.Start(Path.Combine(Environment.CurrentDirectory, System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName), Environment.CommandLine); Application.Quit(); });
 
             var menu = SettingsUI.CreateSubMenu("Enhanced Twitch Chat");
             var channelName = menu.AddString("Twitch Channel Name", "The name of the channel you want Enhanced Twitch Chat to monitor");

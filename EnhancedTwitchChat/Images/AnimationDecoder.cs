@@ -1,6 +1,6 @@
 ﻿using CustomUI.Utilities;
-using EnhancedTwitchChat.UI;
-using EnhancedTwitchChat.Utils;
+using EnhancedStreamChat.Images;
+using EnhancedStreamChat.UI;
 using System;
 using System.Collections;
 using System.Collections.Concurrent;
@@ -11,7 +11,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
 
-namespace EnhancedTwitchChat.Textures
+namespace EnhancedStreamChat.Textures
 {
     class AnimationDecoder
     {
@@ -127,7 +127,7 @@ namespace EnhancedTwitchChat.Textures
 
         private static void ProcessingThread(byte[] gifData, ref GifInfo frameInfo)
         {
-            var gifImage = Utilities.byteArrayToImage(gifData);
+            var gifImage = EmojiUtilities.byteArrayToImage(gifData);
             var dimension = new System.Drawing.Imaging.FrameDimension(gifImage.FrameDimensionsList[0]);
             int frameCount = gifImage.GetFrameCount(dimension);
 

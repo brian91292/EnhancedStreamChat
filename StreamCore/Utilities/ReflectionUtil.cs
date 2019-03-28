@@ -10,7 +10,7 @@ using UnityEngine;
  * (https://github.com/xyonico/BeatSaberSongLoader/blob/master/SongLoaderPlugin/ReflectionUtil.cs)
  */
 
-namespace EnhancedTwitchChat
+namespace StreamCore
 {
     public static class ReflectionUtil
     {

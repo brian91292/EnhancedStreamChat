@@ -1,7 +1,6 @@
 ﻿//using EnhancedTwitchChat.Bot;
-using EnhancedTwitchChat.Config;
-using EnhancedTwitchChat.Textures;
-using EnhancedTwitchChat.Utils;
+using StreamCore.Config;
+using StreamCore.Utils;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -12,7 +11,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using WebSocketSharp;
 
-namespace EnhancedTwitchChat.Chat
+namespace StreamCore.Chat
 {
     public class ChatMessage
     {
@@ -42,7 +41,12 @@ namespace EnhancedTwitchChat.Chat
         public static bool LoggedIn { get; private set; } = true;
         public static DateTime ConnectionTime { get; private set; }
         public static Dictionary<string, TwitchRoom> ChannelInfo { get; private set; } = new Dictionary<string, TwitchRoom>();
-        public static TwitchUser OurTwitchUser = new TwitchUser("Request Bot");
+        public static TwitchUser OurTwitchUser { get; set; } = new TwitchUser("*Invalid Twitch User*");
+
+        public static Action<string> OnTwitchChannelUpdated;
+        public static Action OnConfigUpdated;
+        public static Action OnConnected;
+        public static Action OnDisconnected;
         
         private static DateTime _sendLimitResetTime = DateTime.Now;
         private static Queue<string> _sendQueue = new Queue<string>();
@@ -66,12 +70,15 @@ namespace EnhancedTwitchChat.Chat
             }
         }
         
+        /// <summary>
+        /// Call this function once OnApplicationStart if you intend to use the Twitch chat API
+        /// </summary>
         public static void Initialize()
         {
             if (Initialized)
                 return;
 
-            MessageHandlers.Initialize();
+            TwitchMessageHandlers.Initialize();
 
             // Stop config updated callback when we haven't switched channels
             _lastChannel = TwitchLoginConfig.Instance.TwitchChannelName;
@@ -80,7 +87,12 @@ namespace EnhancedTwitchChat.Chat
 
             Initialized = true;
 
-            Connect();
+            Task.Run(() =>
+            {
+                // Sleep for a second before connecting, to allow for other plugins to register their callbacks incase they depend on a connected callback or something
+                Thread.Sleep(1000);
+                Connect();
+            });
         }
 
         private static void Instance_ConfigChangedEvent(TwitchLoginConfig obj)
@@ -96,9 +108,40 @@ namespace EnhancedTwitchChat.Chat
                     if (TwitchLoginConfig.Instance.TwitchChannelName != String.Empty)
                         JoinChannel(TwitchLoginConfig.Instance.TwitchChannelName);
                     ConnectionTime = DateTime.Now;
-                    ChatHandler.Instance.displayStatusMessage = true;
+
+                    // Invoke OnTwitchChannelUpdated event
+                    if(OnTwitchChannelUpdated != null)
+                    {
+                        foreach(var e in OnTwitchChannelUpdated.GetInvocationList())
+                        {
+                            try
+                            {
+                                e?.DynamicInvoke(TwitchLoginConfig.Instance.TwitchChannelName);
+                            }
+                            catch (Exception ex)
+                            {
+                                Plugin.Log(ex.ToString());
+                            }
+                        }
+                    }
                 }
                 _lastChannel = TwitchLoginConfig.Instance.TwitchChannelName;
+            }
+
+            // Invoke OnConfigUpdated event
+            if (OnConfigUpdated != null)
+            {
+                foreach (var e in OnConfigUpdated.GetInvocationList())
+                {
+                    try
+                    {
+                        e?.DynamicInvoke();
+                    }
+                    catch (Exception ex)
+                    {
+                        Plugin.Log(ex.ToString());
+                    }
+                }
             }
         }
 
@@ -112,13 +155,13 @@ namespace EnhancedTwitchChat.Chat
             }
         }
 
-        public static void Connect(bool isManualReconnect = false)
+        private static void Connect(bool isManualReconnect = false)
         {
             // If they entered invalid login info before, wait here indefinitely until they edit the config manually
-            while (!LoggedIn && !Plugin.Instance.IsApplicationExiting)
+            while (!LoggedIn && !Globals.IsApplicationExiting)
                 Thread.Sleep(500);
 
-            if (Plugin.Instance.IsApplicationExiting)
+            if (Globals.IsApplicationExiting)
                 return;
 
             Plugin.Log("Reconnecting!");
@@ -162,7 +205,22 @@ namespace EnhancedTwitchChat.Chat
 
                         // Display a message in the chat informing the user whether or not the connection to the channel was successful
                         ConnectionTime = DateTime.Now;
-                        ChatHandler.Instance.displayStatusMessage = true;
+
+                        // Invoke OnConnected event
+                        if (OnConnected != null)
+                        {
+                            foreach (var ev in OnConnected.GetInvocationList())
+                            {
+                                try
+                                {
+                                    ev?.DynamicInvoke();
+                                }
+                                catch (Exception ex)
+                                {
+                                    Plugin.Log(ex.ToString());
+                                }
+                            }
+                        }
                         Connected = true;
                     };
 
@@ -214,9 +272,25 @@ namespace EnhancedTwitchChat.Chat
                             Plugin.Log(ex.ToString());
                         }
 
+                        // Invoke OnConnected event
+                        if (OnDisconnected != null)
+                        {
+                            foreach (var ev in OnDisconnected.GetInvocationList())
+                            {
+                                try
+                                {
+                                    ev?.DynamicInvoke();
+                                }
+                                catch (Exception ex)
+                                {
+                                    Plugin.Log(ex.ToString());
+                                }
+                            }
+                        }
+
                         if (!isManualReconnect)
                         {
-                            Thread.Sleep(_reconnectCooldown *= 2);
+                            Thread.Sleep(Math.Max(_reconnectCooldown *= 2, 120000));
                             Connect();
                         }
                     });
@@ -225,11 +299,13 @@ namespace EnhancedTwitchChat.Chat
             }
             catch (ThreadAbortException)
             {
+                // This usually gets hit if our application is exiting or something
                 return;
             }
             catch (Exception ex)
             {
                 Plugin.Log(ex.ToString());
+                // Try to reconnect for any exception in the websocket client other than a ThreadAbortException
                 Thread.Sleep(Math.Max(_reconnectCooldown *= 2, 120000));
                 Connect();
             }
@@ -237,7 +313,7 @@ namespace EnhancedTwitchChat.Chat
 
         private static void ProcessSendQueue(int fullReconnects)
         {
-            while(!Plugin.Instance.IsApplicationExiting && _fullReconnects == fullReconnects)
+            while(!Globals.IsApplicationExiting && _fullReconnects == fullReconnects)
             {
                 if (LoggedIn && _ws.ReadyState == WebSocketState.Open)
                 {
@@ -283,6 +359,11 @@ namespace EnhancedTwitchChat.Chat
 
         public static void PartChannel(string channel)
         {
+            if (channel == TwitchLoginConfig.Instance.TwitchChannelName)
+            {
+                throw new Exception("Cannot part from the channel defined in TwitchLoginConfig.ini.");
+            }
+
             if (LoggedIn && _ws.ReadyState == WebSocketState.Open)
                 SendRawMessage($"PART #{channel}");
         }
@@ -329,7 +410,7 @@ namespace EnhancedTwitchChat.Chat
                 twitchMsg.messageType = messageType.Groups["MessageType"].Value;
                 twitchMsg.channelName = channelName;
                 
-                MessageHandlers.InvokeHandler(twitchMsg);
+                TwitchMessageHandlers.InvokeHandler(twitchMsg);
             }
             catch (Exception ex)
             {

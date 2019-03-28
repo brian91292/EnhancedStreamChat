@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
 
-namespace EnhancedTwitchChat
+namespace StreamCore
 {
     public class ObjectPool<T> where T : Component
     {

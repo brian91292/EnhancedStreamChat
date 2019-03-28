@@ -7,9 +7,9 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using VRUIControls;
 using UnityEngine.UI;
-using EnhancedTwitchChat.Config;
+using EnhancedStreamChat.Config;
 
-namespace EnhancedTwitchChat.Chat
+namespace EnhancedStreamChat.Chat
 {
     class LockToggle : MonoBehaviour
     {

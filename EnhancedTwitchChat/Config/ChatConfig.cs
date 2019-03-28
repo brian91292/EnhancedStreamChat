@@ -1,14 +1,16 @@
 ﻿//using EnhancedTwitchChat.Bot;
 using IllusionPlugin;
-using EnhancedTwitchChat.SimpleJSON;
+using StreamCore.SimpleJSON;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
+using StreamCore.Config;
+using StreamCore;
 
-namespace EnhancedTwitchChat.Config
+namespace EnhancedStreamChat.Config
 {
     public class OldConfigOptions
     {
@@ -31,7 +33,7 @@ namespace EnhancedTwitchChat.Config
     
     public class ChatConfig
     {
-        private string FilePath = Path.Combine(Environment.CurrentDirectory, "UserData", "EnhancedTwitchChat", "EnhancedTwitchChat.ini");
+        private string FilePath = Path.Combine(Globals.DataPath, $"{Plugin.ModuleName}.ini");
 
 
         public string FontName = "Segoe UI";
@@ -179,7 +181,7 @@ namespace EnhancedTwitchChat.Config
                     ConfigSerializer.LoadConfig(oldConfig, FilePath);
 
                     if (oldConfig.SongBlacklist.Length > 0)
-                        File.AppendAllText(Path.Combine(Environment.CurrentDirectory, "UserData", "EnhancedTwitchChat", "SongBlacklistMigration.list"), oldConfig.SongBlacklist + ",");
+                        File.AppendAllText(Path.Combine(Globals.DataPath, "SongBlacklistMigration.list"), oldConfig.SongBlacklist + ",");
                 }
             }
             CorrectConfigSettings();

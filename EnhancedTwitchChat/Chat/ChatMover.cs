@@ -1,4 +1,4 @@
-﻿using EnhancedTwitchChat.Config;
+﻿using EnhancedStreamChat.Config;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,7 +8,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using VRUIControls;
 
-namespace EnhancedTwitchChat.Chat
+namespace EnhancedStreamChat.Chat
 {
     class ChatMover : MonoBehaviour
     {

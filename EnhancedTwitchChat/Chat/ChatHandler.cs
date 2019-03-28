@@ -1,7 +1,7 @@
 ﻿using CustomUI.Utilities;
-using EnhancedTwitchChat.Chat;
-using EnhancedTwitchChat.Textures;
-using EnhancedTwitchChat.UI;
+using EnhancedStreamChat.Chat;
+using EnhancedStreamChat.Textures;
+using EnhancedStreamChat.UI;
 using System;
 using System.Collections;
 using System.Collections.Concurrent;
@@ -12,9 +12,14 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using VRUIControls;
-using EnhancedTwitchChat.Config;
+using EnhancedStreamChat.Config;
+using StreamCore.Chat;
+using StreamCore;
+using StreamCore.Config;
+using StreamCore.Utils;
+using System.Text.RegularExpressions;
 
-namespace EnhancedTwitchChat
+namespace EnhancedStreamChat
 {
     public class ChatHandler : MonoBehaviour
     {
@@ -59,10 +64,13 @@ namespace EnhancedTwitchChat
             Instance = this;
             DontDestroyOnLoad(gameObject);
 
+            // Register our message handlers
+            RegisterMessageHandlers();
+
             // Startup the texture downloader and anim controller
             ImageDownloader.OnLoad();
             AnimationController.OnLoad();
-
+            
             // Initialize the chats UI
             InitializeChatUI();
 
@@ -127,7 +135,7 @@ namespace EnhancedTwitchChat
             if (Drawing.MaterialsCached)
             {
                 // Wait a few seconds after we've connect to the chat, then send our welcome message
-                if (displayStatusMessage && (TwitchWebSocketClient.IsChannelValid || (DateTime.Now - TwitchWebSocketClient.ConnectionTime).TotalSeconds >= 5))
+                if (displayStatusMessage && TwitchWebSocketClient.Initialized && (TwitchWebSocketClient.IsChannelValid || (DateTime.Now - TwitchWebSocketClient.ConnectionTime).TotalSeconds >= 10))
                 {
                     string msg;
                     if (TwitchWebSocketClient.Connected && TwitchWebSocketClient.LoggedIn)
@@ -135,14 +143,14 @@ namespace EnhancedTwitchChat
                         ImageDownloader.Instance.Init();
 
                         if (TwitchLoginConfig.Instance.TwitchChannelName == String.Empty)
-                            msg = $"Welcome to Enhanced Twitch Chat! To continue, enter your Twitch channel name in the Enhanced Twitch Chat settings submenu, or manually in TwitchLoginInfo.ini, which is located in your Beat Saber directory.";
+                            msg = $"Welcome to Enhanced Twitch Chat! To continue, enter your Twitch channel name in the Enhanced Stream Chat settings submenu, or manually in TwitchLoginInfo.ini, which is located in your Beat Saber\\UserData\\StreamCore directory.";
                         else if (TwitchWebSocketClient.IsChannelValid)
                             msg = $"Success joining channel \"{TwitchLoginConfig.Instance.TwitchChannelName}\"";
                         else
                             msg = $"Failed to join channel \"{TwitchLoginConfig.Instance.TwitchChannelName}\". Please enter a valid Twitch channel name in the Enhanced Twitch Chat settings submenu, or manually in TwitchLoginInfo.ini, then try again.";
                     }
                     else
-                        msg = "Failed to login to Twitch! Please check your login info in UserData\\EnhancedTwitchChat\\TwitchLoginInfo.ini, then try again.";
+                        msg = "Failed to login to Twitch! Please check your login info in UserData\\StreamCore\\TwitchLoginInfo.ini, then try again.";
                     
                     RenderQueue.Enqueue(new ChatMessage(msg, new TwitchMessage()));
 
@@ -198,7 +206,7 @@ namespace EnhancedTwitchChat
 
                 }
                 // Save images to file when we're at the main menu
-                else if (Plugin.Instance.IsAtMainMenu && ImageDownloader.ImageSaveQueue.Count > 0 && ImageDownloader.ImageSaveQueue.TryDequeue(out var saveInfo))
+                else if (Globals.IsAtMainMenu && ImageDownloader.ImageSaveQueue.Count > 0 && ImageDownloader.ImageSaveQueue.TryDequeue(out var saveInfo))
                     File.WriteAllBytes(saveInfo.path, saveInfo.data);
             }
         }
@@ -224,6 +232,97 @@ namespace EnhancedTwitchChat
             }
         }
 
+        private void RegisterMessageHandlers()
+        {
+            TwitchWebSocketClient.OnTwitchChannelUpdated += (newChannel) => displayStatusMessage = true;
+            TwitchWebSocketClient.OnConnected += () => displayStatusMessage = true;
+
+            // PRIVMSG handler
+            TwitchMessageHandlers.PRIVMSG += (twitchMsg) => 
+            {
+                MessageParser.Parse(new ChatMessage(Utilities.StripHTML(twitchMsg.message), twitchMsg));
+            };
+            
+            // USERNOTICE handler
+            TwitchMessageHandlers.USERNOTICE += (twitchMsg) =>
+            {
+                string msgId = String.Empty, systemMsg = String.Empty;
+                foreach (Match t in twitchMsg.tags)
+                {
+                    switch (t.Groups["Tag"].Value)
+                    {
+                        case "msg-id":
+                            msgId = t.Groups["Value"].Value;
+                            break;
+                        case "system-msg":
+                            systemMsg = t.Groups["Value"].Value.Replace("\\s", " ");
+                            break;
+                        default:
+                            break;
+                    }
+                }
+                switch (msgId)
+                {
+                    case "sub":
+                    case "resub":
+                    case "subgift":
+                    case "anonsubgift":
+                        MessageParser.Parse(new ChatMessage($"{systemMsg.Substring(systemMsg.IndexOf(" ") + 1).Split(new char[] { '\n' }, 2)[0]}", twitchMsg));
+                        if (twitchMsg.message != String.Empty)
+                            MessageParser.Parse(new ChatMessage(twitchMsg.message, twitchMsg));
+                        break;
+                    case "raid":
+                        break;
+                    case "ritual":
+                        break;
+                }
+            };
+
+            // USERSTATE handler
+            TwitchMessageHandlers.USERSTATE += (twitchMsg) =>
+            {
+                if (!(twitchMsg.user.isBroadcaster || twitchMsg.user.isMod))
+                {
+                    TwitchMessage tmpMessage = new TwitchMessage();
+                    tmpMessage.user.displayName = "NOTICE";
+                    tmpMessage.user.color = "FF0000FF";
+                    MessageParser.Parse(new ChatMessage($"Twitch account {twitchMsg.user.displayName} is not a moderator of channel #{twitchMsg.channelName}. The default user rate limit is 20 messages per 30 seconds; to increase this limit to 100, grant this user moderator privileges.", tmpMessage));
+                }
+            };
+
+            // CLEARCHAT handler
+            TwitchMessageHandlers.CLEARCHAT += (twitchMsg) =>
+            {
+                string userId = "!FULLCLEAR!";
+                foreach (Match t in twitchMsg.tags)
+                {
+                    if (t.Groups["Tag"].Value == "target-user-id")
+                    {
+                        userId = t.Groups["target-user-id"].Value;
+                        break;
+                    }
+                }
+                PurgeMessagesFromUser(userId);
+            };
+
+            // CLEARMSG handler
+            TwitchMessageHandlers.CLEARMSG += (twitchMsg) =>
+            {
+                string msgId = String.Empty;
+                foreach (Match t in twitchMsg.tags)
+                {
+                    if (t.Groups["Tag"].Value == "target-msg-id")
+                    {
+                        msgId = t.Groups["target-msg-id"].Value;
+                        break;
+                    }
+                }
+                if (msgId == String.Empty) return;
+
+                PurgeChatMessageById(msgId);
+            };
+        }
+
         private void InitializeChatUI()
         {
             // Precache a pool of images objects that will be used for displaying emotes/badges later on
@@ -246,9 +345,9 @@ namespace EnhancedTwitchChat
             _lastFontName = ChatConfig.Instance.FontName;
             StartCoroutine(Drawing.Initialize(gameObject.transform));
 
-            _lockedSprite = UIUtilities.LoadSpriteFromResources("EnhancedTwitchChat.Resources.LockedIcon.png");
+            _lockedSprite = UIUtilities.LoadSpriteFromResources("EnhancedStreamChat.Resources.LockedIcon.png");
             _lockedSprite.texture.wrapMode = TextureWrapMode.Clamp;
-            _unlockedSprite = UIUtilities.LoadSpriteFromResources("EnhancedTwitchChat.Resources.UnlockedIcon.png");
+            _unlockedSprite = UIUtilities.LoadSpriteFromResources("EnhancedStreamChat.Resources.UnlockedIcon.png");
             _unlockedSprite.texture.wrapMode = TextureWrapMode.Clamp;
 
             _twitchChatCanvas = gameObject.AddComponent<Canvas>();

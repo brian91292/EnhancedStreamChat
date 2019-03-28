@@ -11,33 +11,17 @@ using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.UI;
-using EnhancedTwitchChat.Utils;
-using EnhancedTwitchChat.Chat;
+using EnhancedStreamChat.Chat;
 using System.Text.RegularExpressions;
-using EnhancedTwitchChat.UI;
+using EnhancedStreamChat.UI;
 using static POCs.Sanjay.SharpSnippets.Drawing.ColorExtensions;
 using Random = System.Random;
+using EnhancedStreamChat.Images;
+using StreamCore;
+using StreamCore.Chat;
 
-
-namespace EnhancedTwitchChat.Textures
+namespace EnhancedStreamChat.Textures
 {
-    public class ImageInfo
-    {
-        public char swapChar;
-        public string textureIndex;
-        public ImageType imageType;
-    }
-
-    public class BadgeInfo : ImageInfo
-    {
-    };
-
-    public class EmoteInfo : ImageInfo
-    {
-        public string swapString;
-        public bool isEmoji;
-    };
-
     public class MessageParser : MonoBehaviour
     {
         private static readonly Regex _emoteRegex = new Regex(@"(?<EmoteIndex>[0-9]+):(?<StartIndex>[^-]+)-(?<EndIndex>[^,^\/\s^;]+)");
@@ -56,13 +40,13 @@ namespace EnhancedTwitchChat.Textures
 
             StringBuilder emojilessMessageBuilder = new StringBuilder(newChatMessage.msg);
             // Parse and download any emojis included in the message
-            var matches = Utilities.GetEmojisInString(newChatMessage.msg);
+            var matches = EmojiUtilities.GetEmojisInString(newChatMessage.msg);
             if (matches.Count > 0)
             {
                 List<string> foundEmojis = new List<string>();
                 foreach (Match m in matches)
                 {
-                    string emojiIndex = Utilities.WebParseEmojiRegExMatchEvaluator(m);
+                    string emojiIndex = EmojiUtilities.WebParseEmojiRegExMatchEvaluator(m);
                     string replaceString = m.Value;
 
                     // Build up a copy of the message with no emojis so we can parse out our twitch emotes properly
@@ -165,9 +149,9 @@ namespace EnhancedTwitchChat.Textures
                     textureIndex = $"F{ImageDownloader.FFZEmoteIDs[word]}";
                     imageType = ImageType.FFZ;
                 }
-                else if (newChatMessage.twitchMessage.bits > 0 && Utilities.cheermoteRegex.IsMatch(word.ToLower()))
+                else if (newChatMessage.twitchMessage.bits > 0 && EmojiUtilities.cheermoteRegex.IsMatch(word.ToLower()))
                 {
-                    Match match = Utilities.cheermoteRegex.Match(word.ToLower());
+                    Match match = EmojiUtilities.cheermoteRegex.Match(word.ToLower());
                     string prefix = match.Groups["Prefix"].Value;
                     if (ImageDownloader.TwitchCheermoteIDs.ContainsKey(prefix))
                     {
@@ -201,7 +185,7 @@ namespace EnhancedTwitchChat.Textures
                 string extraInfo = String.Empty;
                 if (e.imageType == ImageType.Cheermote)
                 {
-                    Match cheermote = Utilities.cheermoteRegex.Match(e.swapString);
+                    Match cheermote = EmojiUtilities.cheermoteRegex.Match(e.swapString);
                     string numBits = cheermote.Groups["Value"].Value;
                     extraInfo = $"\u200A<color={ImageDownloader.TwitchCheermoteIDs[cheermote.Groups["Prefix"].Value].GetColor(Convert.ToInt32(numBits))}>\u200A<size=3><b>{numBits}</b></size></color>\u200A";
                 }
