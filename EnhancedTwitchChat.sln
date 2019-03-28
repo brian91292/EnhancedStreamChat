@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.27428.2037
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EnhancedStreamChat", "EnhancedTwitchChat\EnhancedStreamChat.csproj", "{205F177C-3995-46B4-854B-9EED576B706D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EnhancedStreamChat", "EnhancedStreamChat\EnhancedStreamChat.csproj", "{205F177C-3995-46B4-854B-9EED576B706D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StreamCore", "StreamCore\StreamCore.csproj", "{9C2D1AEF-CCB9-4BDE-B294-9D06D24AE4DB}"
 EndProject
