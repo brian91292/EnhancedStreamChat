@@ -11,7 +11,7 @@ namespace StreamCore.Config
 {
     public class TwitchLoginConfig
     {
-        private string FilePath = Path.Combine(Globals.DataPath, $"{Plugin.ModuleName}.ini");
+        private string FilePath = Path.Combine(Globals.DataPath, $"TwitchLoginInfo.ini");
 
         public string TwitchChannelName = "";
         public string TwitchUsername = "";

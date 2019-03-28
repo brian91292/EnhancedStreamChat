@@ -171,12 +171,15 @@ namespace EnhancedStreamChat.Config
                 {
                     SemiOldConfigOptions semiOldConfigInfo = new SemiOldConfigOptions();
                     ConfigSerializer.LoadConfig(semiOldConfigInfo, FilePath);
-
+                    
                     TwitchLoginConfig.Instance.TwitchChannelName = semiOldConfigInfo.TwitchChannelName;
                     TwitchLoginConfig.Instance.TwitchUsername = semiOldConfigInfo.TwitchUsername;
                     TwitchLoginConfig.Instance.TwitchOAuthToken = semiOldConfigInfo.TwitchOAuthToken;
                     TwitchLoginConfig.Instance.Save(true);
+                }
 
+                if (text.Contains("SongBlacklist="))
+                {
                     var oldConfig = new OldBlacklistOption();
                     ConfigSerializer.LoadConfig(oldConfig, FilePath);
 
@@ -184,13 +187,12 @@ namespace EnhancedStreamChat.Config
                         File.AppendAllText(Path.Combine(Globals.DataPath, "SongBlacklistMigration.list"), oldConfig.SongBlacklist + ",");
                 }
             }
-            CorrectConfigSettings();
             Save();
 
             _configWatcher = new FileSystemWatcher(Path.GetDirectoryName(FilePath))
             {
                 NotifyFilter = NotifyFilters.LastWrite,
-                Filter = "EnhancedTwitchChat.ini",
+                Filter = $"{Plugin.ModuleName}.ini",
                 EnableRaisingEvents = true
             };
             _configWatcher.Changed += ConfigWatcherOnChanged;
@@ -212,6 +214,7 @@ namespace EnhancedStreamChat.Config
         {
             if (!callback)
                 _saving = true;
+
             ConfigSerializer.SaveConfig(this, FilePath);
         }
         
