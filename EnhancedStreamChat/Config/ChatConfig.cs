@@ -161,9 +161,14 @@ namespace EnhancedStreamChat.Config
                 Directory.CreateDirectory(Path.GetDirectoryName(FilePath));
 
             string oldFilePath = Path.Combine(Environment.CurrentDirectory, "UserData", "EnhancedTwitchChat.ini");
-            if(File.Exists(oldFilePath) && !File.Exists(FilePath))
+            if(File.Exists(oldFilePath))
             {
-                File.Move(oldFilePath, FilePath);
+                // Append the data to the blacklist, if any blacklist info exists, then dispose of the old config file.
+                AppendToBlacklist(oldFilePath);
+                if (!File.Exists(FilePath))
+                    File.Move(oldFilePath, FilePath);
+                else
+                    File.Delete(oldFilePath);
             }
 
             if (File.Exists(FilePath))
@@ -180,15 +185,6 @@ namespace EnhancedStreamChat.Config
                     TwitchLoginConfig.Instance.TwitchUsername = semiOldConfigInfo.TwitchUsername;
                     TwitchLoginConfig.Instance.TwitchOAuthToken = semiOldConfigInfo.TwitchOAuthToken;
                     TwitchLoginConfig.Instance.Save(true);
-                }
-
-                if (text.Contains("SongBlacklist="))
-                {
-                    var oldConfig = new OldBlacklistOption();
-                    ConfigSerializer.LoadConfig(oldConfig, FilePath);
-
-                    if (oldConfig.SongBlacklist.Length > 0)
-                        File.AppendAllText(Path.Combine(Globals.DataPath, "SongBlacklistMigration.list"), oldConfig.SongBlacklist + ",");
                 }
             }
             Save();
@@ -220,6 +216,20 @@ namespace EnhancedStreamChat.Config
                 _saving = true;
 
             ConfigSerializer.SaveConfig(this, FilePath);
+        }
+
+        private void AppendToBlacklist(string path)
+        {
+            string text = File.ReadAllText(path);
+
+            if (text.Contains("SongBlacklist="))
+            {
+                var oldConfig = new OldBlacklistOption();
+                ConfigSerializer.LoadConfig(oldConfig, path);
+
+                if (oldConfig.SongBlacklist.Length > 0)
+                    File.AppendAllText(Path.Combine(Globals.DataPath, "SongBlacklistMigration.list"), oldConfig.SongBlacklist + ",");
+            }
         }
         
         private void CorrectConfigSettings()
