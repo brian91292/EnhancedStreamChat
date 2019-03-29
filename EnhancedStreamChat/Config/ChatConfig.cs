@@ -9,6 +9,8 @@ using UnityEngine;
 using UnityEngine.UI;
 using StreamCore.Config;
 using StreamCore;
+using System.Threading.Tasks;
+using System.Threading;
 
 namespace EnhancedStreamChat.Config
 {
@@ -157,47 +159,6 @@ namespace EnhancedStreamChat.Config
         {
             Instance = this;
 
-            if (!Directory.Exists(Path.GetDirectoryName(FilePath)))
-                Directory.CreateDirectory(Path.GetDirectoryName(FilePath));
-
-            string oldFilePath = Path.Combine(Environment.CurrentDirectory, "UserData", "EnhancedTwitchChat.ini");
-            string newerFilePath = Path.Combine(Globals.DataPath, "EnhancedTwitchChat.ini");
-            if(File.Exists(newerFilePath))
-            {
-                // Append the data to the blacklist, if any blacklist info exists, then dispose of the old config file.
-                AppendToBlacklist(newerFilePath);
-                if (!File.Exists(FilePath))
-                    File.Move(newerFilePath, FilePath);
-                else
-                    File.Delete(newerFilePath);
-            }
-            else if (File.Exists(oldFilePath))
-            {
-                // Append the data to the blacklist, if any blacklist info exists, then dispose of the old config file.
-                AppendToBlacklist(oldFilePath);
-                if (!File.Exists(FilePath))
-                    File.Move(oldFilePath, FilePath);
-                else
-                    File.Delete(oldFilePath);
-            }
-
-            if (File.Exists(FilePath))
-            {
-                Load();
-
-                var text = File.ReadAllText(FilePath);
-                if (text.Contains("TwitchUsername="))
-                {
-                    SemiOldConfigOptions semiOldConfigInfo = new SemiOldConfigOptions();
-                    ConfigSerializer.LoadConfig(semiOldConfigInfo, FilePath);
-                    
-                    TwitchLoginConfig.Instance.TwitchChannelName = semiOldConfigInfo.TwitchChannelName;
-                    TwitchLoginConfig.Instance.TwitchUsername = semiOldConfigInfo.TwitchUsername;
-                    TwitchLoginConfig.Instance.TwitchOAuthToken = semiOldConfigInfo.TwitchOAuthToken;
-                    TwitchLoginConfig.Instance.Save(true);
-                }
-            }
-            Save();
 
             _configWatcher = new FileSystemWatcher(Path.GetDirectoryName(FilePath))
             {
@@ -205,7 +166,57 @@ namespace EnhancedStreamChat.Config
                 Filter = $"{Plugin.ModuleName}.ini",
                 EnableRaisingEvents = true
             };
-            _configWatcher.Changed += ConfigWatcherOnChanged;
+
+            Task.Run(() =>
+            {
+                while (!Directory.Exists(Path.GetDirectoryName(FilePath)))
+                    Thread.Sleep(100);
+
+                Plugin.Log("FilePath exists! Continuing initialization!");
+
+                string oldFilePath = Path.Combine(Environment.CurrentDirectory, "UserData", "EnhancedTwitchChat.ini");
+                string newerFilePath = Path.Combine(Globals.DataPath, "EnhancedTwitchChat.ini");
+                if (File.Exists(newerFilePath))
+                {
+                    // Append the data to the blacklist, if any blacklist info exists, then dispose of the old config file.
+                    AppendToBlacklist(newerFilePath);
+                    if (!File.Exists(FilePath))
+                        File.Move(newerFilePath, FilePath);
+                    else
+                        File.Delete(newerFilePath);
+                }
+                else if (File.Exists(oldFilePath))
+                {
+                    // Append the data to the blacklist, if any blacklist info exists, then dispose of the old config file.
+                    AppendToBlacklist(oldFilePath);
+                    if (!File.Exists(FilePath))
+                        File.Move(oldFilePath, FilePath);
+                    else
+                        File.Delete(oldFilePath);
+                }
+
+                if (File.Exists(FilePath))
+                {
+                    Load();
+
+                    var text = File.ReadAllText(FilePath);
+                    if (text.Contains("TwitchUsername="))
+                    {
+                        SemiOldConfigOptions semiOldConfigInfo = new SemiOldConfigOptions();
+                        ConfigSerializer.LoadConfig(semiOldConfigInfo, FilePath);
+
+                        TwitchLoginConfig.Instance.TwitchChannelName = semiOldConfigInfo.TwitchChannelName;
+                        TwitchLoginConfig.Instance.TwitchUsername = semiOldConfigInfo.TwitchUsername;
+                        TwitchLoginConfig.Instance.TwitchOAuthToken = semiOldConfigInfo.TwitchOAuthToken;
+                        TwitchLoginConfig.Instance.Save(true);
+                    }
+                }
+                Save();
+
+                _configWatcher.Changed += ConfigWatcherOnChanged;
+            });
+
+          
         }
 
         ~ChatConfig()
