@@ -240,6 +240,10 @@ namespace EnhancedStreamChat
             // PRIVMSG handler
             TwitchMessageHandlers.PRIVMSG += (twitchMsg) => 
             {
+                // Don't show any messages that aren't from the channel in the config
+                if (twitchMsg.channelName != TwitchLoginConfig.Instance.TwitchChannelName)
+                    return;
+
                 MessageParser.Parse(new ChatMessage(Utilities.StripHTML(twitchMsg.message), twitchMsg));
             };
             
