@@ -56,7 +56,7 @@ namespace EnhancedStreamChat
         public static void OnLoad()
         {
             if (Instance) return;
-            new GameObject("EnhancedTwitchChatHandler").AddComponent<ChatHandler>();
+            new GameObject("EnhancedStreamChatHandler").AddComponent<ChatHandler>();
         }
 
         public void Awake()
@@ -78,7 +78,7 @@ namespace EnhancedStreamChat
             ChatConfig.Instance.ConfigChangedEvent += ChatConfigChanged;
 
             initialized = true;
-            Plugin.Log("EnhancedTwitchChat initialized");
+            Plugin.Log("EnhancedStreamChat initialized");
         }
         
         public void SceneManager_activeSceneChanged(Scene from, Scene to)
@@ -143,7 +143,7 @@ namespace EnhancedStreamChat
                         ImageDownloader.Instance.Init();
 
                         if (TwitchLoginConfig.Instance.TwitchChannelName == String.Empty)
-                            msg = $"Welcome to Enhanced Twitch Chat! To continue, enter your Twitch channel name in the Enhanced Stream Chat settings submenu, or manually in TwitchLoginInfo.ini, which is located in your Beat Saber\\UserData\\StreamCore directory.";
+                            msg = $"Welcome to Enhanced Stream Chat! To continue, enter your Twitch channel name in the Enhanced Stream Chat settings submenu, or manually in TwitchLoginInfo.ini, which is located in your Beat Saber\\UserData\\StreamCore directory.";
                         else if (TwitchWebSocketClient.IsChannelValid)
                             msg = $"Success joining channel \"{TwitchLoginConfig.Instance.TwitchChannelName}\"";
                         else
@@ -358,14 +358,14 @@ namespace EnhancedStreamChat
             _canvasRectTransform = _twitchChatCanvas.GetComponent<RectTransform>();
             _canvasRectTransform.localScale = new Vector3(0.012f * ChatConfig.Instance.ChatScale, 0.012f * ChatConfig.Instance.ChatScale, 0.012f * ChatConfig.Instance.ChatScale);
 
-            background = new GameObject("EnhancedTwitchChatBackground").AddComponent<Image>();
+            background = new GameObject("EnhancedStreamChatBackground").AddComponent<Image>();
             background.rectTransform.SetParent(gameObject.transform, false);
             background.color = ChatConfig.Instance.BackgroundColor;
             background.rectTransform.pivot = new Vector2(0, 0);
             background.rectTransform.sizeDelta = new Vector2(ChatConfig.Instance.ChatWidth + ChatConfig.Instance.BackgroundPadding, 0);
             background.rectTransform.localPosition = new Vector3(0 - (ChatConfig.Instance.ChatWidth + ChatConfig.Instance.BackgroundPadding) / 2, 0, 0);
 
-            var lockButtonGameObj = new GameObject("EnhancedTwitchChatLockButton");
+            var lockButtonGameObj = new GameObject("EnhancedStreamChatLockButton");
             lockButtonImage = lockButtonGameObj.AddComponent<Image>();
             lockButtonImage.preserveAspect = true;
             lockButtonImage.rectTransform.sizeDelta = new Vector2(10, 10);

@@ -14,6 +14,7 @@ using System.Runtime.CompilerServices;
 using TMPro;
 using EnhancedStreamChat.Config;
 using StreamCore.Chat;
+using StreamCore.Utils;
 
 namespace EnhancedStreamChat
 {
@@ -50,6 +51,23 @@ namespace EnhancedStreamChat
         private IEnumerator DelayedStartup()
         {
             yield return new WaitForSeconds(0.5f);
+
+            try
+            {
+                if (Utilities.IsModInstalled("EnhancedTwitchChat"))
+                {
+                    string oldFile = Path.Combine(Environment.CurrentDirectory, "Plugins", "EnhancedTwitchChat.dll.old");
+                    if (File.Exists(oldFile))
+                    {
+                        File.Delete(oldFile);
+                    }
+                    File.Move(Path.Combine(Environment.CurrentDirectory, "Plugins", "EnhancedTwitchChat.dll"), oldFile);
+                }
+            }
+            catch(Exception ex)
+            {
+                Log(ex.ToString());
+            }
 
             ChatHandler.OnLoad();
 
