@@ -18,6 +18,7 @@ using StreamCore;
 using StreamCore.Config;
 using StreamCore.Utils;
 using System.Text.RegularExpressions;
+using EnhancedStreamChat.Images;
 
 namespace EnhancedStreamChat
 {

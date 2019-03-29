@@ -55,7 +55,7 @@
     <Reference Include="StreamCore, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\StreamCore\bin\Debug\StreamCore.dll</HintPath>
-	  <HintPath>..\StreamCore\bin\Release\StreamCore.dll</HintPath>
+      <HintPath>..\StreamCore\bin\Release\StreamCore.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -131,9 +131,11 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Chat\ChatMessage.cs" />
     <Compile Include="Chat\MessageParser.cs" />
     <Compile Include="Config\ChatConfig.cs" />
     <Compile Include="Images\EmojiUtils.cs" />
+    <Compile Include="Images\ImageDefinitions.cs" />
     <Compile Include="UI\ColorExtensions.cs" />
     <Compile Include="Chat\ChatMover.cs" />
     <Compile Include="Chat\LockToggle.cs" />
