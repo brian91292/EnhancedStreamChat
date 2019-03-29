@@ -161,7 +161,17 @@ namespace EnhancedStreamChat.Config
                 Directory.CreateDirectory(Path.GetDirectoryName(FilePath));
 
             string oldFilePath = Path.Combine(Environment.CurrentDirectory, "UserData", "EnhancedTwitchChat.ini");
-            if(File.Exists(oldFilePath))
+            string newerFilePath = Path.Combine(Globals.DataPath, "EnhancedTwitchChat.ini");
+            if(File.Exists(newerFilePath))
+            {
+                // Append the data to the blacklist, if any blacklist info exists, then dispose of the old config file.
+                AppendToBlacklist(newerFilePath);
+                if (!File.Exists(FilePath))
+                    File.Move(newerFilePath, FilePath);
+                else
+                    File.Delete(newerFilePath);
+            }
+            else if (File.Exists(oldFilePath))
             {
                 // Append the data to the blacklist, if any blacklist info exists, then dispose of the old config file.
                 AppendToBlacklist(oldFilePath);

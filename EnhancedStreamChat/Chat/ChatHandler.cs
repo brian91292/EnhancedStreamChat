@@ -579,12 +579,14 @@ namespace EnhancedStreamChat
                     FreeImages(currentMessage);
                     purged = true;
                 }
-
-                if(id == "!FULLCLEAR!")
-                    RenderQueue.Enqueue(new ChatMessage("Chat was cleared by a moderator.", new TwitchMessage()));
             }
             if (purged)
+            {
+                if (id == "!FULLCLEAR!")
+                    RenderQueue.Enqueue(new ChatMessage("Chat was cleared by a moderator.", new TwitchMessage()));
+
                 UpdateChatUI();
+            }
         }
 
         public void PurgeChatMessageById(string messageId)
