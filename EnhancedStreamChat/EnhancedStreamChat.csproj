@@ -54,7 +54,8 @@
     </Reference>
     <Reference Include="StreamCore, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Beat Saber\Plugins\StreamCore.dll</HintPath>
+      <HintPath>..\StreamCore\bin\Debug\StreamCore.dll</HintPath>
+	  <HintPath>..\StreamCore\bin\Release\StreamCore.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
