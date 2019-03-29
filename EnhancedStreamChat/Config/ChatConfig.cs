@@ -65,9 +65,13 @@ namespace EnhancedStreamChat.Config
         public float BackgroundPadding = 4;
 
         public bool AnimatedEmotes = true;
+        public bool ClearChatEnabled = true;
+        public bool ClearTimedOutMessages = true;
         public bool DrawShadows = false;
         public bool LockChatPosition = false;
         public bool ReverseChatOrder = false;
+        public bool ShowBTTVEmotes = true;
+        public bool ShowFFZEmotes = true;
 
         public bool FilterCommandMessages = false;
         public bool FilterBroadcasterMessages = false;

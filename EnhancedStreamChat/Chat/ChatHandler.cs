@@ -556,6 +556,11 @@ namespace EnhancedStreamChat
             bool isUserId = messageInfo.Value;
             string id = messageInfo.Key;
 
+            if (id == "!FULLCLEAR!" && !ChatConfig.Instance.ClearChatEnabled)
+                return;
+            else if (id != "!FULLCLEAR!" && !ChatConfig.Instance.ClearTimedOutMessages)
+                return;
+
             bool purged = false;
             foreach (CustomText currentMessage in _chatMessages)
             {
@@ -573,6 +578,9 @@ namespace EnhancedStreamChat
                     FreeImages(currentMessage);
                     purged = true;
                 }
+
+                if(id == "!FULLCLEAR!")
+                    RenderQueue.Enqueue(new ChatMessage("Chat was cleared by a moderator.", new TwitchMessage()));
             }
             if (purged)
                 UpdateChatUI();

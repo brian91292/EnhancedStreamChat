@@ -19,6 +19,7 @@ using Random = System.Random;
 using EnhancedStreamChat.Images;
 using StreamCore;
 using StreamCore.Chat;
+using EnhancedStreamChat.Config;
 
 namespace EnhancedStreamChat.Textures
 {
@@ -136,18 +137,27 @@ namespace EnhancedStreamChat.Textures
                 ImageType imageType = ImageType.None;
                 if (ImageDownloader.BTTVEmoteIDs.ContainsKey(word))
                 {
-                    textureIndex = $"B{ImageDownloader.BTTVEmoteIDs[word]}";
-                    imageType = ImageType.BTTV;
+                    if (ChatConfig.Instance.ShowBTTVEmotes)
+                    {
+                        textureIndex = $"B{ImageDownloader.BTTVEmoteIDs[word]}";
+                        imageType = ImageType.BTTV;
+                    }
                 }
                 else if (ImageDownloader.BTTVAnimatedEmoteIDs.ContainsKey(word))
                 {
-                    textureIndex = $"AB{ImageDownloader.BTTVAnimatedEmoteIDs[word]}";
-                    imageType = ImageType.BTTV_Animated;
+                    if (ChatConfig.Instance.ShowBTTVEmotes)
+                    {
+                        textureIndex = $"AB{ImageDownloader.BTTVAnimatedEmoteIDs[word]}";
+                        imageType = ImageType.BTTV_Animated;
+                    }
                 }
                 else if (ImageDownloader.FFZEmoteIDs.ContainsKey(word))
                 {
-                    textureIndex = $"F{ImageDownloader.FFZEmoteIDs[word]}";
-                    imageType = ImageType.FFZ;
+                    if (ChatConfig.Instance.ShowFFZEmotes)
+                    {
+                        textureIndex = $"F{ImageDownloader.FFZEmoteIDs[word]}";
+                        imageType = ImageType.FFZ;
+                    }
                 }
                 else if (newChatMessage.twitchMessage.bits > 0 && EmojiUtilities.cheermoteRegex.IsMatch(word.ToLower()))
                 {
