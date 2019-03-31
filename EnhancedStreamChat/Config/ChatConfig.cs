@@ -158,15 +158,7 @@ namespace EnhancedStreamChat.Config
         public ChatConfig()
         {
             Instance = this;
-
-
-            _configWatcher = new FileSystemWatcher(Path.GetDirectoryName(FilePath))
-            {
-                NotifyFilter = NotifyFilters.LastWrite,
-                Filter = $"{Plugin.ModuleName}.ini",
-                EnableRaisingEvents = true
-            };
-
+            _configWatcher = new FileSystemWatcher();
             Task.Run(() =>
             {
                 while (!Directory.Exists(Path.GetDirectoryName(FilePath)))
@@ -213,10 +205,13 @@ namespace EnhancedStreamChat.Config
                 }
                 Save();
 
+                _configWatcher.Path = Path.GetDirectoryName(FilePath);
+                _configWatcher.NotifyFilter = NotifyFilters.LastWrite;
+                _configWatcher.Filter = $"{Plugin.ModuleName}.ini";
+                _configWatcher.EnableRaisingEvents = true;
+
                 _configWatcher.Changed += ConfigWatcherOnChanged;
             });
-
-          
         }
 
         ~ChatConfig()
