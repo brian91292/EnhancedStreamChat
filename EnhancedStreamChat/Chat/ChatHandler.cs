@@ -1,5 +1,4 @@
-﻿using CustomUI.Utilities;
-using EnhancedStreamChat.Chat;
+﻿using EnhancedStreamChat.Chat;
 using EnhancedStreamChat.Textures;
 using EnhancedStreamChat.UI;
 using System;
@@ -245,7 +244,7 @@ namespace EnhancedStreamChat
                 if (twitchMsg.channelName != TwitchLoginConfig.Instance.TwitchChannelName)
                     return;
                 
-                MessageParser.Parse(new ChatMessage(Utilities.StripHTML(twitchMsg.message), twitchMsg));
+                MessageParser.Parse(new ChatMessage(Utilities.EscapeHTML(twitchMsg.message), twitchMsg));
             };
             
             // USERNOTICE handler
@@ -303,7 +302,7 @@ namespace EnhancedStreamChat
                 {
                     if (t.Groups["Tag"].Value == "target-user-id")
                     {
-                        userId = t.Groups["target-user-id"].Value;
+                        userId = t.Groups["Value"].Value;
                         break;
                     }
                 }
@@ -318,12 +317,11 @@ namespace EnhancedStreamChat
                 {
                     if (t.Groups["Tag"].Value == "target-msg-id")
                     {
-                        msgId = t.Groups["target-msg-id"].Value;
+                        msgId = t.Groups["Value"].Value;
                         break;
                     }
                 }
                 if (msgId == String.Empty) return;
-
                 PurgeChatMessageById(msgId);
             };
         }
@@ -350,9 +348,9 @@ namespace EnhancedStreamChat
             _lastFontName = ChatConfig.Instance.FontName;
             StartCoroutine(Drawing.Initialize(gameObject.transform));
 
-            _lockedSprite = UIUtilities.LoadSpriteFromResources("EnhancedStreamChat.Resources.LockedIcon.png");
+            _lockedSprite = Utilities.LoadSpriteFromResources("EnhancedStreamChat.Resources.LockedIcon.png");
             _lockedSprite.texture.wrapMode = TextureWrapMode.Clamp;
-            _unlockedSprite = UIUtilities.LoadSpriteFromResources("EnhancedStreamChat.Resources.UnlockedIcon.png");
+            _unlockedSprite = Utilities.LoadSpriteFromResources("EnhancedStreamChat.Resources.UnlockedIcon.png");
             _unlockedSprite.texture.wrapMode = TextureWrapMode.Clamp;
 
             _twitchChatCanvas = gameObject.AddComponent<Canvas>();
@@ -561,7 +559,7 @@ namespace EnhancedStreamChat
                 return;
             else if (id != "!FULLCLEAR!" && !ChatConfig.Instance.ClearTimedOutMessages)
                 return;
-
+            
             bool purged = false;
             foreach (CustomText currentMessage in _chatMessages)
             {

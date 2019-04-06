@@ -11,12 +11,12 @@ using EnhancedStreamChat.Textures;
 using System.Collections;
 using static POCs.Sanjay.SharpSnippets.Drawing.ColorExtensions;
 using Random = System.Random;
-using CustomUI.Utilities;
 using System.Reflection;
 using EnhancedStreamChat.Config;
 using EnhancedStreamChat.Images;
 using StreamCore;
 using StreamCore.Chat;
+using StreamCore.Utils;
 
 namespace EnhancedStreamChat.UI
 {
@@ -100,7 +100,7 @@ namespace EnhancedStreamChat.UI
             get
             {
                 if(!_assets)
-                    _assets = AssetBundle.LoadFromMemory(UIUtilities.GetResource(Assembly.GetExecutingAssembly(), "EnhancedStreamChat.Resources.Assets"));
+                    _assets = AssetBundle.LoadFromMemory(Utilities.GetResource(Assembly.GetExecutingAssembly(), "EnhancedStreamChat.Resources.Assets"));
                 return _assets;
             }
         }

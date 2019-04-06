@@ -36,15 +36,13 @@
     <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="0Harmony">
-      <HintPath>..\..\..\..\..\..\steam\steamapps\common\Beat Saber\Beat Saber_Data\Managed\0Harmony.dll</HintPath>
-    </Reference>
-    <Reference Include="Assembly-CSharp">
-      <HintPath>..\..\..\..\..\..\beatsaber\Beat Saber_Data\Managed\Assembly-CSharp.dll</HintPath>
-    </Reference>
-    <Reference Include="BeatSaberCustomUI, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="Assembly-CSharp, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\..\..\steam\steamapps\common\Beat Saber\Plugins\BeatSaberCustomUI.dll</HintPath>
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Beat Saber\Beat Saber_Data\Managed\Assembly-CSharp.dll</HintPath>
+    </Reference>
+    <Reference Include="BeatSaberCustomUI, Version=1.4.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Beat Saber\Plugins\BeatSaberCustomUI.dll</HintPath>
     </Reference>
     <Reference Include="IllusionInjector, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\..\..\..\..\..\beatsaber\Beat Saber_Data\Managed\IllusionInjector.dll</HintPath>

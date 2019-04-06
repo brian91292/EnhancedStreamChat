@@ -8,8 +8,6 @@ using EnhancedStreamChat.Chat;
 using EnhancedStreamChat.UI;
 using System.Threading.Tasks;
 using System.Collections;
-using CustomUI.BeatSaber;
-//using EnhancedTwitchChat.Bot;
 using System.Runtime.CompilerServices;
 using TMPro;
 using EnhancedStreamChat.Config;
@@ -22,7 +20,7 @@ namespace EnhancedStreamChat
     {
         public static readonly string ModuleName = "EnhancedStreamChat";
         public string Name => ModuleName;
-        public string Version => "2.0.0";
+        public string Version => "2.0.1";
         
         public static Plugin Instance { get; private set; }
 
@@ -40,7 +38,6 @@ namespace EnhancedStreamChat
         {
             if (Instance != null) return;
             Instance = this;
-            
             ChatConfig = new ChatConfig();
 
             TwitchWebSocketClient.Initialize();

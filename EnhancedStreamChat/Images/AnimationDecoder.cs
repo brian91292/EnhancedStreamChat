@@ -1,5 +1,4 @@
-﻿using CustomUI.Utilities;
-using EnhancedStreamChat.Images;
+﻿using EnhancedStreamChat.Images;
 using EnhancedStreamChat.UI;
 using System;
 using System.Collections;

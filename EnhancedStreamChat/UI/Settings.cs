@@ -1,8 +1,4 @@
-﻿using CustomUI.MenuButton;
-using CustomUI.Settings;
-using CustomUI.Utilities;
-using CustomUI.UIElements;
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,6 +11,7 @@ using EnhancedStreamChat.Config;
 //using EnhancedTwitchIntegration.Config;
 using System.IO;
 using StreamCore.Config;
+using CustomUI.Settings;
 
 namespace EnhancedStreamChat.UI
 {
@@ -86,13 +83,13 @@ namespace EnhancedStreamChat.UI
             var messageSpacing = menu.AddSlider("Message Spacing", "The amount of vertical space between each message.", 0, 20, 2, true);
             messageSpacing.SetValue += (spacing) => { ChatConfig.Instance.LineSpacing = spacing; };
             messageSpacing.GetValue += () => { return (int)ChatConfig.Instance.LineSpacing; };
-            
+
             var textColor = menu.AddColorPicker("Text Color", "Choose the color of the menu text.", ChatConfig.Instance.TextColor);
             textColor.SetValue += (texCol) => { ChatConfig.Instance.TextColor = texCol; };
             textColor.GetValue += () => { return ChatConfig.Instance.TextColor; };
 
             var backgroundColor = menu.AddColorPicker("Background Color", "Choose the color of the menu background.", ChatConfig.Instance.BackgroundColor);
-            backgroundColor.SetValue += (bgCol) => {  ChatConfig.Instance.BackgroundColor = bgCol; };
+            backgroundColor.SetValue += (bgCol) => { ChatConfig.Instance.BackgroundColor = bgCol; };
             backgroundColor.GetValue += () => { return ChatConfig.Instance.BackgroundColor; };
         }
     }

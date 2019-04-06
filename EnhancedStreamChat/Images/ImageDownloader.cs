@@ -13,7 +13,6 @@ using UnityEngine.XR;
 using EnhancedStreamChat.UI;
 using StreamCore.SimpleJSON;
 using System.Text.RegularExpressions;
-using CustomUI.Utilities;
 using EnhancedStreamChat.Config;
 using StreamCore;
 using EnhancedStreamChat.Images;
@@ -280,7 +279,7 @@ namespace EnhancedStreamChat.Textures
                     bool localPathExists = ImageExistsLocally(ref imagePath, imageDownloadInfo, out var localFilePath);
                     yield return Utilities.Download(imagePath, Utilities.DownloadType.Texture,  null, (web) =>
                     {
-                        sprite = UIUtilities.LoadSpriteFromTexture(DownloadHandlerTexture.GetContent(web));
+                        sprite = Utilities.LoadSpriteFromTexture(DownloadHandlerTexture.GetContent(web));
                         if (sprite)
                         {
                             if (!localPathExists)
@@ -289,7 +288,7 @@ namespace EnhancedStreamChat.Textures
                     });
                 }
                 else
-                    sprite = UIUtilities.LoadSpriteFromResources($"EnhancedStreamChat.Resources.Emojis.{imageDownloadInfo.spriteIndex.ToLower()}");
+                    sprite = Utilities.LoadSpriteFromResources($"EnhancedStreamChat.Resources.Emojis.{imageDownloadInfo.spriteIndex.ToLower()}");
 
                 if (sprite)
                 {
