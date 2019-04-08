@@ -130,7 +130,7 @@ namespace EnhancedStreamChat.Textures
         {
             if (Instance) return;
 
-            new GameObject("EnhancedTwitchChatImageDownloader").AddComponent<ImageDownloader>();
+            new GameObject("EnhancedStreamChatImageDownloader").AddComponent<ImageDownloader>();
         }
 
         public void Awake()

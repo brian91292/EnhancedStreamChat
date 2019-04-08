@@ -26,8 +26,7 @@ namespace EnhancedStreamChat
         public static ChatHandler Instance = null;
         public static ConcurrentQueue<ChatMessage> RenderQueue = new ConcurrentQueue<ChatMessage>();
         public static Func<TwitchMessage, bool> ChatMessageFilters;
-
-        public bool displayStatusMessage = false;
+        
         public Image lockButtonImage;
         public Image background;
         public GameObject lockButtonPrimitive;
@@ -52,6 +51,8 @@ namespace EnhancedStreamChat
         private string _lastFontName;
         private CustomText _testMessage = null;
         private readonly WaitUntil _delay = new WaitUntil(() => { return Instance._waitForFrames == 0; });
+        private bool _hasDisplayedStatus = false;
+        private DateTime _startupTime = DateTime.Now;
 
         public static void OnLoad()
         {
@@ -130,31 +131,38 @@ namespace EnhancedStreamChat
             background.color = ChatConfig.Instance.BackgroundColor;
         }
 
-        public void FixedUpdate()
+        public void Update()
         {
             if (Drawing.MaterialsCached)
             {
                 // Wait a few seconds after we've connect to the chat, then send our welcome message
-                if (displayStatusMessage && TwitchWebSocketClient.Initialized && (TwitchWebSocketClient.IsChannelValid || (DateTime.Now - TwitchWebSocketClient.ConnectionTime).TotalSeconds >= 10))
+                if (!_hasDisplayedStatus && TwitchWebSocketClient.Initialized && (TwitchWebSocketClient.IsChannelValid || ((DateTime.Now - _startupTime).TotalSeconds >= 10 && (DateTime.Now - TwitchWebSocketClient.ConnectionTime).TotalSeconds >= 10)))
                 {
                     string msg;
                     if (TwitchWebSocketClient.Connected && TwitchWebSocketClient.LoggedIn)
                     {
-                        ImageDownloader.Instance.Init();
-
                         if (TwitchLoginConfig.Instance.TwitchChannelName == String.Empty)
+                        {
                             msg = $"Welcome to Enhanced Stream Chat! To continue, enter your Twitch channel name in the Enhanced Stream Chat settings submenu, or manually in TwitchLoginInfo.ini, which is located in your Beat Saber\\UserData\\StreamCore directory.";
+                        }
                         else if (TwitchWebSocketClient.IsChannelValid)
+                        {
+                            ImageDownloader.Instance.Init();
                             msg = $"Success joining channel \"{TwitchLoginConfig.Instance.TwitchChannelName}\"";
+                        }
                         else
+                        {
                             msg = $"Failed to join channel \"{TwitchLoginConfig.Instance.TwitchChannelName}\". Please enter a valid Twitch channel name in the Enhanced Twitch Chat settings submenu, or manually in TwitchLoginInfo.ini, then try again.";
+                        }
                     }
                     else
                         msg = "Failed to login to Twitch! Please check your login info in UserData\\StreamCore\\TwitchLoginInfo.ini, then try again.";
+
+                    //msg += $" Connected: {TwitchWebSocketClient.Connected}, LoggedIn: {TwitchWebSocketClient.LoggedIn}, ChannelValid: {TwitchWebSocketClient.IsChannelValid}, TimeDiff: {(DateTime.Now - _startupTime).TotalSeconds}";
                     
                     RenderQueue.Enqueue(new ChatMessage(msg, new TwitchMessage()));
 
-                    displayStatusMessage = false;
+                    _hasDisplayedStatus = true;
                 }
 
                 if (_configChanged)
@@ -203,7 +211,6 @@ namespace EnhancedStreamChat
                         }
                         StartCoroutine(AddNewChatMessage(messageToSend.msg, messageToSend));
                     }
-
                 }
                 // Save images to file when we're at the main menu
                 else if (Globals.IsAtMainMenu && ImageDownloader.ImageSaveQueue.Count > 0 && ImageDownloader.ImageSaveQueue.TryDequeue(out var saveInfo))
@@ -234,8 +241,8 @@ namespace EnhancedStreamChat
 
         private void RegisterMessageHandlers()
         {
-            TwitchWebSocketClient.OnTwitchChannelUpdated += (newChannel) => displayStatusMessage = true;
-            TwitchWebSocketClient.OnConnected += () => displayStatusMessage = true;
+            TwitchWebSocketClient.OnTwitchChannelUpdated += (newChannel) => _hasDisplayedStatus = false;
+            TwitchWebSocketClient.OnConnected += () => _hasDisplayedStatus = false;
 
             // PRIVMSG handler
             TwitchMessageHandlers.PRIVMSG += (twitchMsg) => 
