@@ -43,7 +43,7 @@ To manually edit the config options, browse to `Beat Saber\UserData\StreamCore\E
 | **ShowFFZEmotes** | When set to true, FrankerFaceZ emotes will be shown in chat. |
 | **FilterCommandMessages** | When set to true, messages starting with ! won't be shown in chat. |
 | **FilterBroadcasterMessages** | When set to true, messages from the broadcaster won't be shown in chat. |
-| **FilterSelfMessages** | When set to true, messages the logged in streaming service user account will not be displayed in chat. |
+| **FilterSelfMessages** | When set to true, the logged in account will not be shown in chat. |
 
 # Compiling
 To compile this mod simply clone the repo and update the project references to reference the corresponding assemblies in the `Beat Saber\Beat Saber_Data\Managed` folder, then compile. You may need to remove the post build event if your Beat Saber directory isn't at the same location as mine.
