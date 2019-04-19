@@ -1,5 +1,5 @@
 # Mod Info
-EnhancedStreamChat is a rich text stream chat integration mod (currentl supports Twitch) with full unicode, emote, cheermote, and emoji support.
+Enhanced Stream Chat is a rich text stream chat integration mod (currentl supports Twitch) with full unicode, emote, cheermote, and emoji support.
 
 # Features
 - Full Rich Text Support, see ALL of your Twitch chat when immersed in Beat Saber!
@@ -7,7 +7,7 @@ EnhancedStreamChat is a rich text stream chat integration mod (currentl supports
   - This also includes full Unicode Support! This means you can enjoy the chat in any language!
 
 # Dependencies
-Enhanced Twitch Chat depends on [CustomUI](https://github.com/brian91292/BeatSaberCustomUI/releases), and [StreamCore](https://github.com/brian91292/StreamCore/releases). Make sure to install them, or Enhanced Twitch Chat won't work!
+Enhanced Twitch Chat depends on [CustomUI](https://github.com/brian91292/BeatSaberCustomUI/releases), and [StreamCore](https://github.com/brian91292/StreamCore/releases). Make sure to install them, or Enhanced Stream Chat won't work!
   
 # Installation
 Copy EnhancedStreamChat.dll to your Beat Saber\Plugins folder, and install all of its dependencies. That's it!
@@ -17,7 +17,7 @@ All you need to enter is the channel name which you want to join (see the `Setup
 
 # Setup
 Most common options can be configured directly via the Beat Saber settings menu in the Enhanced Stream Chat submenu, as seen in the image below. 
-![Enhanced Twitch Chat settings menu](https://i.imgur.com/GSPmjPb.jpg)
+![Enhanced Stream Chat settings menu](https://i.imgur.com/GSPmjPb.jpg)
 
 # Config
 To manually edit the config options, browse to `Beat Saber\UserData\StreamCore\EnhancedStreamChat.ini` file.  *Keep in mind all config options will update in realtime when you save the file! This means you don't have to restart the game to see your changes!* Use the tables below as a guide for setting these values:
