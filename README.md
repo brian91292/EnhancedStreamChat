@@ -1,5 +1,5 @@
 # Mod Info
-Enhanced Stream Chat is a rich text stream chat integration mod (currentl supports Twitch) with full unicode, emote, cheermote, and emoji support.
+Enhanced Stream Chat is a rich text stream chat integration mod (currently supports Twitch) with full unicode, emote, cheermote, and emoji support.
 
 # Features
 - Full Rich Text Support, see ALL of your Twitch chat when immersed in Beat Saber!
