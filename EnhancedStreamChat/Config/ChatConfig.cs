@@ -35,7 +35,7 @@ namespace EnhancedStreamChat.Config
     
     public class ChatConfig
     {
-        private string FilePath = Path.Combine(Globals.DataPath, $"{Plugin.ModuleName}.ini");
+        private string FilePath = Path.Combine(Globals.DataPath, $"{Plugin.ModuleName.Replace(" ", "")}.ini");
 
 
         public string FontName = "Segoe UI";
@@ -207,7 +207,7 @@ namespace EnhancedStreamChat.Config
 
                 _configWatcher.Path = Path.GetDirectoryName(FilePath);
                 _configWatcher.NotifyFilter = NotifyFilters.LastWrite;
-                _configWatcher.Filter = $"{Plugin.ModuleName}.ini";
+                _configWatcher.Filter = $"{Plugin.ModuleName.Replace(" ", "")}.ini";
                 _configWatcher.EnableRaisingEvents = true;
 
                 _configWatcher.Changed += ConfigWatcherOnChanged;
