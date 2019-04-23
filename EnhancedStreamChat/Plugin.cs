@@ -13,27 +13,28 @@ using TMPro;
 using EnhancedStreamChat.Config;
 using StreamCore.Chat;
 using StreamCore.Utils;
+using CustomUI.Utilities;
 
 namespace EnhancedStreamChat
 {
     public class Plugin : IPlugin
     {
-        public static readonly string ModuleName = "EnhancedStreamChat";
+        public static readonly string ModuleName = "Enhanced Stream Chat";
         public string Name => ModuleName;
-        public string Version => "2.0.2";
+        public string Version => "2.0.3";
         
         public static Plugin Instance { get; private set; }
 
         private ChatConfig ChatConfig;
 
         public static void Log(string text,
-                        [CallerFilePath] string file = "",
-                        [CallerMemberName] string member = "",
-                        [CallerLineNumber] int line = 0)
+                [CallerFilePath] string file = "",
+                [CallerMemberName] string member = "",
+                [CallerLineNumber] int line = 0)
         {
-            Console.WriteLine($"[{ModuleName}] {DateTime.UtcNow} {Path.GetFileName(file)}->{member}({line}): {text}");
+            Console.WriteLine($"{ModuleName}::{Path.GetFileName(file)}->{member}({line}): {text}");
         }
-        
+
         public void OnApplicationStart()
         {
             if (Instance != null) return;
@@ -106,7 +107,7 @@ namespace EnhancedStreamChat
         public void OnFixedUpdate()
         {
         }
-
+        
         public void OnUpdate()
         {
         }

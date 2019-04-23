@@ -192,6 +192,8 @@ namespace EnhancedStreamChat
                             return;
                         if (ChatConfig.Instance.FilterCommandMessages && messageToSend.twitchMessage.message.StartsWith("!"))
                             return;
+                        if (ChatConfig.Instance.FilterSelfMessages && messageToSend.twitchMessage.user.id == TwitchWebSocketClient.OurTwitchUser.id)
+                            return;
 
                         if (ChatMessageFilters != null)
                         {
@@ -250,7 +252,7 @@ namespace EnhancedStreamChat
                 // Don't show any messages that aren't from the channel in the config
                 if (twitchMsg.channelName != TwitchLoginConfig.Instance.TwitchChannelName)
                     return;
-                
+
                 MessageParser.Parse(new ChatMessage(Utilities.EscapeHTML(twitchMsg.message), twitchMsg));
             };
             

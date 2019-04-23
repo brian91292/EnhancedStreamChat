@@ -77,7 +77,7 @@ namespace EnhancedStreamChat.Config
 
         public bool FilterCommandMessages = false;
         public bool FilterBroadcasterMessages = false;
-        public bool FilterUserlistMessages = true; // Filter messages in chatexclude.users ( pick a better name ) 
+        public bool FilterSelfMessages = false;
 
       
         public event Action<ChatConfig> ConfigChangedEvent;
@@ -265,11 +265,7 @@ namespace EnhancedStreamChat.Config
             }
 
             Load();
-
-            if (ConfigChangedEvent != null)
-            {
-                ConfigChangedEvent(this);
-            }
+            ConfigChangedEvent?.Invoke(this);
         }
     }
 }
