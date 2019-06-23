@@ -60,11 +60,13 @@ namespace EnhancedStreamChat.Textures
         public string spriteIndex;
         public ImageType type;
         public string messageIndex;
-        public TextureDownloadInfo(string index, ImageType type, string messageIndex)
+        public bool noCache;
+        public TextureDownloadInfo(string index, ImageType type, string messageIndex, bool noCache = false)
         {
             this.spriteIndex = index;
             this.type = type;
             this.messageIndex = messageIndex;
+            this.noCache = noCache;
         }
     };
 
@@ -118,6 +120,7 @@ namespace EnhancedStreamChat.Textures
         public static ConcurrentDictionary<string, string> TwitchBadgeIDs = new ConcurrentDictionary<string, string>();
         public static ConcurrentDictionary<string, string> BTTVAnimatedEmoteIDs = new ConcurrentDictionary<string, string>();
         public static ConcurrentDictionary<string, Cheermote> TwitchCheermoteIDs = new ConcurrentDictionary<string, Cheermote>();
+        public static ConcurrentDictionary<string, string> YouTubeProfileImages = new ConcurrentDictionary<string, string>();
 
         public static ConcurrentDictionary<string, CachedSpriteData> CachedTextures = new ConcurrentDictionary<string, CachedSpriteData>();
         public static ConcurrentQueue<TextureSaveInfo> ImageSaveQueue = new ConcurrentQueue<TextureSaveInfo>();
@@ -260,7 +263,7 @@ namespace EnhancedStreamChat.Textures
                 {
                     CachedTextures.TryAdd(imageDownloadInfo.spriteIndex, null);
                     yield return AnimationDecoder.Process(animData, ChatHandler.Instance.OverlayAnimatedImage, imageDownloadInfo);
-                    if (!localPathExists)
+                    if (!localPathExists && !imageDownloadInfo.noCache)
                         ImageSaveQueue.Enqueue(new TextureSaveInfo(localFilePath, animData));
                 }
 
@@ -282,7 +285,7 @@ namespace EnhancedStreamChat.Textures
                         sprite = Utilities.LoadSpriteFromTexture(DownloadHandlerTexture.GetContent(web));
                         if (sprite)
                         {
-                            if (!localPathExists)
+                            if (!localPathExists && !imageDownloadInfo.noCache)
                                 ImageSaveQueue.Enqueue(new TextureSaveInfo(localFilePath, web.downloadHandler.data));
                         }
                     });

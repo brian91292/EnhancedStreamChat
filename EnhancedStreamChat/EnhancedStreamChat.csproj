@@ -129,8 +129,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Chat\ChatMessage.cs" />
-    <Compile Include="Chat\TwitchMessageParser.cs" />
-    <Compile Include="Chat\YouTubeMessageParser.cs" />
+    <Compile Include="Chat\MessageParser.cs" />
     <Compile Include="Config\ChatConfig.cs" />
     <Compile Include="Images\EmojiUtils.cs" />
     <Compile Include="Images\ImageDefinitions.cs" />

@@ -246,7 +246,7 @@ namespace EnhancedStreamChat
         {
             YouTubeLiveChat.OnMessageReceived = (youTubeMsg) =>
             {
-                YouTubeMessageParser.Parse(new ChatMessage(Utilities.EscapeHTML(youTubeMsg.message), youTubeMsg));
+                MessageParser.Parse(new ChatMessage(Utilities.EscapeHTML(youTubeMsg.message), youTubeMsg));
             };
 
             TwitchWebSocketClient.OnTwitchChannelUpdated = (newChannel) => _hasDisplayedStatus = false;
@@ -259,7 +259,7 @@ namespace EnhancedStreamChat
                 if (twitchMsg.channelName != TwitchLoginConfig.Instance.TwitchChannelName)
                     return;
 
-                TwitchMessageParser.Parse(new ChatMessage(Utilities.EscapeHTML(twitchMsg.message), twitchMsg));
+                MessageParser.Parse(new ChatMessage(Utilities.EscapeHTML(twitchMsg.message), twitchMsg));
             };
             
             // USERNOTICE handler
@@ -286,9 +286,9 @@ namespace EnhancedStreamChat
                     case "resub":
                     case "subgift":
                     case "anonsubgift":
-                        TwitchMessageParser.Parse(new ChatMessage($"{systemMsg.Substring(systemMsg.IndexOf(" ") + 1).Split(new char[] { '\n' }, 2)[0]}", twitchMsg));
+                        MessageParser.Parse(new ChatMessage($"{systemMsg.Substring(systemMsg.IndexOf(" ") + 1).Split(new char[] { '\n' }, 2)[0]}", twitchMsg));
                         if (twitchMsg.message != String.Empty)
-                            TwitchMessageParser.Parse(new ChatMessage(twitchMsg.message, twitchMsg));
+                            MessageParser.Parse(new ChatMessage(twitchMsg.message, twitchMsg));
                         break;
                     case "raid":
                         break;
@@ -305,7 +305,7 @@ namespace EnhancedStreamChat
                     TwitchMessage tmpMessage = new TwitchMessage();
                     tmpMessage.user.displayName = "NOTICE";
                     tmpMessage.user.color = "FF0000FF";
-                    TwitchMessageParser.Parse(new ChatMessage($"Twitch account {twitchMsg.user.displayName} is not a moderator of channel #{twitchMsg.channelName}. The default user rate limit is 20 messages per 30 seconds; to increase this limit to 100, grant this user moderator privileges.", tmpMessage));
+                    MessageParser.Parse(new ChatMessage($"Twitch account {twitchMsg.user.displayName} is not a moderator of channel #{twitchMsg.channelName}. The default user rate limit is 20 messages per 30 seconds; to increase this limit to 100, grant this user moderator privileges.", tmpMessage));
                 }
             };
 

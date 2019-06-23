@@ -19,10 +19,12 @@ using EnhancedStreamChat.Images;
 using StreamCore;
 using EnhancedStreamChat.Config;
 using EnhancedStreamChat.Textures;
+using StreamCore.Chat;
+using StreamCore.YouTube;
 
 namespace EnhancedStreamChat.Chat
 {
-    public class TwitchMessageParser : MonoBehaviour
+    public class MessageParser : MonoBehaviour
     {
         private static readonly Regex _emoteRegex = new Regex(@"(?<EmoteIndex>[0-9]+):(?<StartIndex>[^-]+)-(?<EndIndex>[^,^\/\s^;]+)", RegexOptions.Compiled);
         private static readonly Regex _badgeRegex = new Regex(@"(?<BadgeName>[a-z,0-9,_-]+)\/(?<BadgeVersion>[^,^;]+),*", RegexOptions.Compiled);
@@ -30,13 +32,10 @@ namespace EnhancedStreamChat.Chat
         private static Dictionary<int, string> _userColors = new Dictionary<int, string>();
         public static void Parse(ChatMessage newChatMessage)
         {
+            // Setup local variables
             char swapChar = (char)0xE000;
             List<EmoteInfo> parsedEmotes = new List<EmoteInfo>();
             List<BadgeInfo> parsedBadges = new List<BadgeInfo>();
-
-            bool isActionMessage = newChatMessage.displayMsg.Substring(1).StartsWith("ACTION") && newChatMessage.displayMsg[0] == (char)0x1;
-            if (isActionMessage)
-                newChatMessage.displayMsg = newChatMessage.displayMsg.TrimEnd((char)0x1).Substring(8);
 
             StringBuilder emojilessMessageBuilder = new StringBuilder(newChatMessage.displayMsg);
             // Parse and download any emojis included in the message
@@ -76,116 +75,126 @@ namespace EnhancedStreamChat.Chat
                 Thread.Sleep(5);
             }
 
-            var emotes = _emoteRegex.Matches(newChatMessage.origMessage.Twitch.emotes);
-            // Parse and download any twitch emotes in the message
-            if (emotes.Count > 0)
+            bool isActionMessage = false;
+            if (newChatMessage.origMessage is TwitchMessage)
             {
-                string emojilessMessage = emojilessMessageBuilder.ToString();
-                foreach (Match e in emotes)
+                // If this is a twitch message, check if they used /me and color it accordingly
+                isActionMessage = newChatMessage.displayMsg.Substring(1).StartsWith("ACTION") && newChatMessage.displayMsg[0] == (char)0x1;
+                if (isActionMessage)
+                    newChatMessage.displayMsg = newChatMessage.displayMsg.TrimEnd((char)0x1).Substring(8);
+
+
+                // Parse and download any twitch emotes in the message
+                var emotes = _emoteRegex.Matches(newChatMessage.origMessage.Twitch.emotes);
+                if (emotes.Count > 0)
                 {
-                    string emoteIndex = $"T{e.Groups["EmoteIndex"].Value}";
-                    if (!ImageDownloader.CachedTextures.ContainsKey(emoteIndex))
-                        ImageDownloader.Instance.Queue(new TextureDownloadInfo(emoteIndex, ImageType.Twitch, newChatMessage.origMessage.id));
-
-                    int startReplace = Convert.ToInt32(e.Groups["StartIndex"].Value);
-                    int endReplace = Convert.ToInt32(e.Groups["EndIndex"].Value);
-
-                    EmoteInfo swapInfo = new EmoteInfo();
-                    swapInfo.swapChar = swapChar;
-                    swapInfo.swapString = emojilessMessage.Substring(startReplace, endReplace - startReplace + 1);
-                    swapInfo.textureIndex = emoteIndex;
-                    swapInfo.imageType = ImageType.Twitch;
-                    parsedEmotes.Add(swapInfo);
-                    swapChar++;
-                }
-                Thread.Sleep(5);
-            }
-
-            var badges = _badgeRegex.Matches(newChatMessage.origMessage.user.Twitch.badges);
-            // Parse and download any twitch badges included in the message
-            if (badges.Count > 0)
-            {
-                foreach (Match b in badges)
-                {
-                    string badgeName = $"{b.Groups["BadgeName"].Value}{b.Groups["BadgeVersion"].Value}";
-                    string badgeIndex = string.Empty;
-                    if (ImageDownloader.TwitchBadgeIDs.ContainsKey(badgeName))
+                    string emojilessMessage = emojilessMessageBuilder.ToString();
+                    foreach (Match e in emotes)
                     {
-                        badgeIndex = ImageDownloader.TwitchBadgeIDs[badgeName];
-                        if (!ImageDownloader.CachedTextures.ContainsKey(badgeIndex))
-                            ImageDownloader.Instance.Queue(new TextureDownloadInfo(badgeIndex, ImageType.Badge, newChatMessage.origMessage.id));
+                        string emoteIndex = $"T{e.Groups["EmoteIndex"].Value}";
+                        if (!ImageDownloader.CachedTextures.ContainsKey(emoteIndex))
+                            ImageDownloader.Instance.Queue(new TextureDownloadInfo(emoteIndex, ImageType.Twitch, newChatMessage.origMessage.id));
 
-                        BadgeInfo swapInfo = new BadgeInfo();
+                        int startReplace = Convert.ToInt32(e.Groups["StartIndex"].Value);
+                        int endReplace = Convert.ToInt32(e.Groups["EndIndex"].Value);
+
+                        EmoteInfo swapInfo = new EmoteInfo();
                         swapInfo.swapChar = swapChar;
-                        swapInfo.textureIndex = badgeIndex;
-                        swapInfo.imageType = ImageType.Badge;
-                        parsedBadges.Add(swapInfo);
+                        swapInfo.swapString = emojilessMessage.Substring(startReplace, endReplace - startReplace + 1);
+                        swapInfo.textureIndex = emoteIndex;
+                        swapInfo.imageType = ImageType.Twitch;
+                        parsedEmotes.Add(swapInfo);
+                        swapChar++;
+                    }
+                    Thread.Sleep(5);
+                }
+
+                // Parse and download any twitch badges included in the message
+                var badges = _badgeRegex.Matches(newChatMessage.origMessage.user.Twitch.badges);
+                if (badges.Count > 0)
+                {
+                    foreach (Match b in badges)
+                    {
+                        string badgeName = $"{b.Groups["BadgeName"].Value}{b.Groups["BadgeVersion"].Value}";
+                        string badgeIndex = string.Empty;
+                        if (ImageDownloader.TwitchBadgeIDs.ContainsKey(badgeName))
+                        {
+                            badgeIndex = ImageDownloader.TwitchBadgeIDs[badgeName];
+                            if (!ImageDownloader.CachedTextures.ContainsKey(badgeIndex))
+                                ImageDownloader.Instance.Queue(new TextureDownloadInfo(badgeIndex, ImageType.Badge, newChatMessage.origMessage.id));
+
+                            BadgeInfo swapInfo = new BadgeInfo();
+                            swapInfo.swapChar = swapChar;
+                            swapInfo.textureIndex = badgeIndex;
+                            swapInfo.imageType = ImageType.Badge;
+                            parsedBadges.Add(swapInfo);
+                            swapChar++;
+                        }
+                    }
+                    Thread.Sleep(5);
+                }
+
+                // Parse and download any BTTV/FFZ emotes and cheeremotes in the message
+                string[] msgParts = newChatMessage.displayMsg.Split(' ').Distinct().ToArray();
+                foreach (string w in msgParts)
+                {
+                    string word = w;
+                    //Plugin.Log($"WORD: {word}");
+                    string textureIndex = String.Empty;
+                    ImageType imageType = ImageType.None;
+                    if (ImageDownloader.BTTVEmoteIDs.ContainsKey(word))
+                    {
+                        if (ChatConfig.Instance.ShowBTTVEmotes)
+                        {
+                            textureIndex = $"B{ImageDownloader.BTTVEmoteIDs[word]}";
+                            imageType = ImageType.BTTV;
+                        }
+                    }
+                    else if (ImageDownloader.BTTVAnimatedEmoteIDs.ContainsKey(word))
+                    {
+                        if (ChatConfig.Instance.ShowBTTVEmotes)
+                        {
+                            textureIndex = $"AB{ImageDownloader.BTTVAnimatedEmoteIDs[word]}";
+                            imageType = ImageType.BTTV_Animated;
+                        }
+                    }
+                    else if (ImageDownloader.FFZEmoteIDs.ContainsKey(word))
+                    {
+                        if (ChatConfig.Instance.ShowFFZEmotes)
+                        {
+                            textureIndex = $"F{ImageDownloader.FFZEmoteIDs[word]}";
+                            imageType = ImageType.FFZ;
+                        }
+                    }
+                    else if (newChatMessage.origMessage.Twitch.bits > 0 && EmojiUtilities.cheermoteRegex.IsMatch(word.ToLower()))
+                    {
+                        Match match = EmojiUtilities.cheermoteRegex.Match(word.ToLower());
+                        string prefix = match.Groups["Prefix"].Value;
+                        if (ImageDownloader.TwitchCheermoteIDs.ContainsKey(prefix))
+                        {
+                            int bits = Convert.ToInt32(match.Groups["Value"].Value);
+                            string tier = ImageDownloader.TwitchCheermoteIDs[prefix].GetTier(bits);
+                            textureIndex = $"{prefix}{tier}";
+                            imageType = ImageType.Cheermote;
+                        }
+                    }
+
+                    if (imageType != ImageType.None)
+                    {
+                        if (!ImageDownloader.CachedTextures.ContainsKey(textureIndex))
+                            ImageDownloader.Instance.Queue(new TextureDownloadInfo(textureIndex, imageType, newChatMessage.origMessage.id));
+
+                        EmoteInfo swapInfo = new EmoteInfo();
+                        swapInfo.imageType = imageType;
+                        swapInfo.swapChar = swapChar;
+                        swapInfo.swapString = word;
+                        swapInfo.textureIndex = textureIndex;
+                        parsedEmotes.Add(swapInfo);
                         swapChar++;
                     }
                 }
                 Thread.Sleep(5);
             }
-
-            // Parse and download any BTTV/FFZ emotes and cheeremotes in the message
-            string[] msgParts = newChatMessage.displayMsg.Split(' ').Distinct().ToArray();
-            foreach (string w in msgParts)
-            {
-                string word = w;
-                //Plugin.Log($"WORD: {word}");
-                string textureIndex = String.Empty;
-                ImageType imageType = ImageType.None;
-                if (ImageDownloader.BTTVEmoteIDs.ContainsKey(word))
-                {
-                    if (ChatConfig.Instance.ShowBTTVEmotes)
-                    {
-                        textureIndex = $"B{ImageDownloader.BTTVEmoteIDs[word]}";
-                        imageType = ImageType.BTTV;
-                    }
-                }
-                else if (ImageDownloader.BTTVAnimatedEmoteIDs.ContainsKey(word))
-                {
-                    if (ChatConfig.Instance.ShowBTTVEmotes)
-                    {
-                        textureIndex = $"AB{ImageDownloader.BTTVAnimatedEmoteIDs[word]}";
-                        imageType = ImageType.BTTV_Animated;
-                    }
-                }
-                else if (ImageDownloader.FFZEmoteIDs.ContainsKey(word))
-                {
-                    if (ChatConfig.Instance.ShowFFZEmotes)
-                    {
-                        textureIndex = $"F{ImageDownloader.FFZEmoteIDs[word]}";
-                        imageType = ImageType.FFZ;
-                    }
-                }
-                else if (newChatMessage.origMessage.Twitch.bits > 0 && EmojiUtilities.cheermoteRegex.IsMatch(word.ToLower()))
-                {
-                    Match match = EmojiUtilities.cheermoteRegex.Match(word.ToLower());
-                    string prefix = match.Groups["Prefix"].Value;
-                    if (ImageDownloader.TwitchCheermoteIDs.ContainsKey(prefix))
-                    {
-                        int bits = Convert.ToInt32(match.Groups["Value"].Value);
-                        string tier = ImageDownloader.TwitchCheermoteIDs[prefix].GetTier(bits);
-                        textureIndex = $"{prefix}{tier}";
-                        imageType = ImageType.Cheermote;
-                    }
-                }
-
-                if (imageType != ImageType.None)
-                {
-                    if (!ImageDownloader.CachedTextures.ContainsKey(textureIndex))
-                        ImageDownloader.Instance.Queue(new TextureDownloadInfo(textureIndex, imageType, newChatMessage.origMessage.id));
-
-                    EmoteInfo swapInfo = new EmoteInfo();
-                    swapInfo.imageType = imageType;
-                    swapInfo.swapChar = swapChar;
-                    swapInfo.swapString = word;
-                    swapInfo.textureIndex = textureIndex;
-                    parsedEmotes.Add(swapInfo);
-                    swapChar++;
-                }
-            }
-            Thread.Sleep(5);
 
             string[] parts = newChatMessage.displayMsg.Split(' ');
             // Replace each emote with a unicode character from a private range; we'll draw the emote at the position of this character later on
@@ -194,10 +203,12 @@ namespace EnhancedStreamChat.Chat
                 string extraInfo = String.Empty;
                 if (e.imageType == ImageType.Cheermote)
                 {
+                    // Insert an animated cheermote into the message
                     Match cheermote = EmojiUtilities.cheermoteRegex.Match(e.swapString);
                     string numBits = cheermote.Groups["Value"].Value;
                     extraInfo = $"\u200A<color={ImageDownloader.TwitchCheermoteIDs[cheermote.Groups["Prefix"].Value].GetColor(Convert.ToInt32(numBits))}>\u200A<size=3><b>{numBits}</b></size></color>\u200A";
                 }
+                // Replace any instances of the swapString we find in the message
                 string replaceString = $"\u00A0{Drawing.imageSpacing}{Char.ConvertFromUtf32(e.swapChar)}{extraInfo}";
                 for (int i = 0; i < parts.Length; i++)
                 {
@@ -219,10 +230,11 @@ namespace EnhancedStreamChat.Chat
             //if (Plugin._twitchUsername != String.Empty && msg.Contains(Plugin._twitchUsername)) {
             //    msg = $"<mark=#ffff0050>{msg}</mark>";
             //}
-
+            
             string displayColor = newChatMessage.origMessage.user.color;
             int nameHash = newChatMessage.origMessage.user.displayName.GetHashCode();
-            if ((displayColor == null || displayColor == String.Empty) && !_userColors.TryGetValue(nameHash, out displayColor))
+            // If the user doesn't already have a displayColor, generate one and store it for later user
+            if (string.IsNullOrEmpty(displayColor) && !_userColors.TryGetValue(nameHash, out displayColor))
             {
                 // Generate a random color
                 Random rand = new Random(nameHash);
@@ -237,6 +249,7 @@ namespace EnhancedStreamChat.Chat
                 _userColors.Add(nameHash, colorString);
                 displayColor = colorString;
             }
+            // Set the final displayColor to our message
             newChatMessage.displayColor = displayColor;
 
             // Add the users name to the message with the correct color
