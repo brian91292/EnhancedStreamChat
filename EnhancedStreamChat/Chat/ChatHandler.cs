@@ -18,6 +18,7 @@ using StreamCore.Config;
 using StreamCore.Utils;
 using System.Text.RegularExpressions;
 using EnhancedStreamChat.Images;
+using StreamCore.YouTube;
 
 namespace EnhancedStreamChat
 {
@@ -160,7 +161,7 @@ namespace EnhancedStreamChat
 
                     //msg += $" Connected: {TwitchWebSocketClient.Connected}, LoggedIn: {TwitchWebSocketClient.LoggedIn}, ChannelValid: {TwitchWebSocketClient.IsChannelValid}, TimeDiff: {(DateTime.Now - _startupTime).TotalSeconds}";
                     
-                    RenderQueue.Enqueue(new ChatMessage(msg, new TwitchMessage()));
+                    RenderQueue.Enqueue(new ChatMessage(msg, new GenericChatMessage()));
 
                     _hasDisplayedStatus = true;
                 }
@@ -188,11 +189,11 @@ namespace EnhancedStreamChat
                 {
                     if (RenderQueue.TryDequeue(out var messageToSend))
                     {
-                        if (ChatConfig.Instance.FilterBroadcasterMessages && messageToSend.twitchMessage.user.isBroadcaster)
+                        if (ChatConfig.Instance.FilterBroadcasterMessages && (messageToSend.origMessage.user.Twitch.isBroadcaster || messageToSend.origMessage.user.YouTube.isChatOwner))
                             return;
-                        if (ChatConfig.Instance.FilterCommandMessages && messageToSend.twitchMessage.message.StartsWith("!"))
+                        if (ChatConfig.Instance.FilterCommandMessages && messageToSend.origMessage.message.StartsWith("!"))
                             return;
-                        if (ChatConfig.Instance.FilterSelfMessages && messageToSend.twitchMessage.user.id == TwitchWebSocketClient.OurTwitchUser.id)
+                        if (ChatConfig.Instance.FilterSelfMessages && messageToSend.origMessage.user.id == TwitchWebSocketClient.OurTwitchUser.id) //todo, implement this for youtube
                             return;
 
                         if (ChatMessageFilters != null)
@@ -201,7 +202,7 @@ namespace EnhancedStreamChat
                             {
                                 try
                                 {
-                                    var ret = (bool)filter?.DynamicInvoke(messageToSend.twitchMessage);
+                                    var ret = (bool)filter?.DynamicInvoke(messageToSend.origMessage);
                                     if (ret)
                                         return;
                                 }
@@ -211,7 +212,7 @@ namespace EnhancedStreamChat
                                 }
                             }
                         }
-                        StartCoroutine(AddNewChatMessage(messageToSend.msg, messageToSend));
+                        StartCoroutine(AddNewChatMessage(messageToSend.displayMsg, messageToSend));
                     }
                 }
                 // Save images to file when we're at the main menu
@@ -243,21 +244,26 @@ namespace EnhancedStreamChat
 
         private void RegisterMessageHandlers()
         {
-            TwitchWebSocketClient.OnTwitchChannelUpdated += (newChannel) => _hasDisplayedStatus = false;
-            TwitchWebSocketClient.OnConnected += () => _hasDisplayedStatus = false;
+            YouTubeLiveChat.OnMessageReceived = (youTubeMsg) =>
+            {
+                YouTubeMessageParser.Parse(new ChatMessage(Utilities.EscapeHTML(youTubeMsg.message), youTubeMsg));
+            };
+
+            TwitchWebSocketClient.OnTwitchChannelUpdated = (newChannel) => _hasDisplayedStatus = false;
+            TwitchWebSocketClient.OnConnected = () => _hasDisplayedStatus = false;
 
             // PRIVMSG handler
-            TwitchMessageHandlers.PRIVMSG += (twitchMsg) => 
+            TwitchMessageHandlers.PRIVMSG = (twitchMsg) => 
             {
                 // Don't show any messages that aren't from the channel in the config
                 if (twitchMsg.channelName != TwitchLoginConfig.Instance.TwitchChannelName)
                     return;
 
-                MessageParser.Parse(new ChatMessage(Utilities.EscapeHTML(twitchMsg.message), twitchMsg));
+                TwitchMessageParser.Parse(new ChatMessage(Utilities.EscapeHTML(twitchMsg.message), twitchMsg));
             };
             
             // USERNOTICE handler
-            TwitchMessageHandlers.USERNOTICE += (twitchMsg) =>
+            TwitchMessageHandlers.USERNOTICE = (twitchMsg) =>
             {
                 string msgId = String.Empty, systemMsg = String.Empty;
                 foreach (Match t in twitchMsg.tags)
@@ -280,9 +286,9 @@ namespace EnhancedStreamChat
                     case "resub":
                     case "subgift":
                     case "anonsubgift":
-                        MessageParser.Parse(new ChatMessage($"{systemMsg.Substring(systemMsg.IndexOf(" ") + 1).Split(new char[] { '\n' }, 2)[0]}", twitchMsg));
+                        TwitchMessageParser.Parse(new ChatMessage($"{systemMsg.Substring(systemMsg.IndexOf(" ") + 1).Split(new char[] { '\n' }, 2)[0]}", twitchMsg));
                         if (twitchMsg.message != String.Empty)
-                            MessageParser.Parse(new ChatMessage(twitchMsg.message, twitchMsg));
+                            TwitchMessageParser.Parse(new ChatMessage(twitchMsg.message, twitchMsg));
                         break;
                     case "raid":
                         break;
@@ -292,19 +298,19 @@ namespace EnhancedStreamChat
             };
 
             // USERSTATE handler
-            TwitchMessageHandlers.USERSTATE += (twitchMsg) =>
+            TwitchMessageHandlers.USERSTATE = (twitchMsg) =>
             {
-                if (!(twitchMsg.user.isBroadcaster || twitchMsg.user.isMod))
+                if (!(twitchMsg.user.Twitch.isBroadcaster || twitchMsg.user.Twitch.isMod))
                 {
                     TwitchMessage tmpMessage = new TwitchMessage();
                     tmpMessage.user.displayName = "NOTICE";
                     tmpMessage.user.color = "FF0000FF";
-                    MessageParser.Parse(new ChatMessage($"Twitch account {twitchMsg.user.displayName} is not a moderator of channel #{twitchMsg.channelName}. The default user rate limit is 20 messages per 30 seconds; to increase this limit to 100, grant this user moderator privileges.", tmpMessage));
+                    TwitchMessageParser.Parse(new ChatMessage($"Twitch account {twitchMsg.user.displayName} is not a moderator of channel #{twitchMsg.channelName}. The default user rate limit is 20 messages per 30 seconds; to increase this limit to 100, grant this user moderator privileges.", tmpMessage));
                 }
             };
 
             // CLEARCHAT handler
-            TwitchMessageHandlers.CLEARCHAT += (twitchMsg) =>
+            TwitchMessageHandlers.CLEARCHAT = (twitchMsg) =>
             {
                 string userId = "!FULLCLEAR!";
                 foreach (Match t in twitchMsg.tags)
@@ -319,7 +325,7 @@ namespace EnhancedStreamChat
             };
 
             // CLEARMSG handler
-            TwitchMessageHandlers.CLEARMSG += (twitchMsg) =>
+            TwitchMessageHandlers.CLEARMSG = (twitchMsg) =>
             {
                 string msgId = String.Empty;
                 foreach (Match t in twitchMsg.tags)
@@ -423,7 +429,7 @@ namespace EnhancedStreamChat
 
                 // Italicize action messages and make the whole message the color of the users name
                 if (messageInfo.isActionMessage)
-                    msg = $"<i><color={messageInfo.twitchMessage.user.color}>{msg}</color></i>";
+                    msg = $"<i><color={messageInfo.displayColor}>{msg}</color></i>";
 
                 currentMessage = _chatMessages.Dequeue();
                 currentMessage.hasRendered = false;
@@ -549,7 +555,7 @@ namespace EnhancedStreamChat
 
         private bool PurgeChatMessage(CustomText currentMessage)
         {
-            string userName = $"<color={currentMessage.messageInfo.twitchMessage.user.color}><b>{currentMessage.messageInfo.twitchMessage.user.displayName}</b></color>:";
+            string userName = $"<color={currentMessage.messageInfo.displayColor}><b>{currentMessage.messageInfo.origMessage.user.displayName}</b></color>:";
             if (currentMessage.text.Contains(userName))
                 currentMessage.text = $"{userName} <message deleted>";
             else
@@ -575,9 +581,9 @@ namespace EnhancedStreamChat
                 if (currentMessage.messageInfo == null) continue;
 
                 // Handle purging messages by user id or by message id, since both are possible
-                if (id == "!FULLCLEAR!" || (isUserId && currentMessage.messageInfo.twitchMessage.user.id == id) || (!isUserId && currentMessage.messageInfo.twitchMessage.id == id))
+                if (id == "!FULLCLEAR!" || (isUserId && currentMessage.messageInfo.origMessage.user.id == id) || (!isUserId && currentMessage.messageInfo.origMessage.id == id))
                 {
-                    string userName = $"<color={currentMessage.messageInfo.twitchMessage.user.color}><b>{currentMessage.messageInfo.twitchMessage.user.displayName}</b></color>:";
+                    string userName = $"<color={currentMessage.messageInfo.displayColor}><b>{currentMessage.messageInfo.origMessage.user.displayName}</b></color>:";
                     if (currentMessage.text.Contains(userName))
                         currentMessage.text = $"{userName} <message deleted>";
                     else
@@ -590,7 +596,7 @@ namespace EnhancedStreamChat
             if (purged)
             {
                 if (id == "!FULLCLEAR!")
-                    RenderQueue.Enqueue(new ChatMessage("Chat was cleared by a moderator.", new TwitchMessage()));
+                    RenderQueue.Enqueue(new ChatMessage("Chat was cleared by a moderator.", new GenericChatMessage()));
 
                 UpdateChatUI();
             }

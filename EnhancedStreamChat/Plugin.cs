@@ -13,6 +13,7 @@ using TMPro;
 using EnhancedStreamChat.Config;
 using StreamCore.Chat;
 using StreamCore.Utils;
+using StreamCore.YouTube;
 using CustomUI.Utilities;
 
 namespace EnhancedStreamChat
@@ -42,7 +43,8 @@ namespace EnhancedStreamChat
             ChatConfig = new ChatConfig();
 
             TwitchWebSocketClient.Initialize();
-
+            YouTubeConnection.Initialize();
+            
             SharedCoroutineStarter.instance.StartCoroutine(DelayedStartup());
         }
 
