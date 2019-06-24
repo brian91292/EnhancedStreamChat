@@ -81,45 +81,13 @@ namespace EnhancedStreamChat.Textures
         }
     };
 
-    public class CheermoteTier
-    {
-        public int minBits = 0;
-        public string color = "";
-        public bool canCheer = false;
-    }
-
-    public class Cheermote
-    {
-        public List<CheermoteTier> tiers = new List<CheermoteTier>();
-
-        public string GetColor(int numBits)
-        {
-            for (int i = 1; i < tiers.Count; i++)
-            {
-                if (numBits < tiers[i].minBits)
-                    return tiers[i - 1].color;
-            }
-            return tiers[0].color;
-        }
-
-        public string GetTier(int numBits)
-        {
-            for (int i = 1; i < tiers.Count; i++)
-            {
-                if(numBits < tiers[i].minBits)
-                    return tiers[i-1].minBits.ToString();
-            }
-            return tiers[0].minBits.ToString();
-        }
-    }
-
     public class ImageDownloader : MonoBehaviour
     {
         public static ConcurrentDictionary<string, string> BTTVEmoteIDs = new ConcurrentDictionary<string, string>();
         public static ConcurrentDictionary<string, string> FFZEmoteIDs = new ConcurrentDictionary<string, string>();
         public static ConcurrentDictionary<string, string> TwitchBadgeIDs = new ConcurrentDictionary<string, string>();
         public static ConcurrentDictionary<string, string> BTTVAnimatedEmoteIDs = new ConcurrentDictionary<string, string>();
-        public static ConcurrentDictionary<string, Cheermote> TwitchCheermoteIDs = new ConcurrentDictionary<string, Cheermote>();
+        public static ConcurrentDictionary<string, TwitchCheermote> TwitchCheermoteIDs = new ConcurrentDictionary<string, TwitchCheermote>();
         public static ConcurrentDictionary<string, string> YouTubeProfileImages = new ConcurrentDictionary<string, string>();
 
         public static ConcurrentDictionary<string, CachedSpriteData> CachedTextures = new ConcurrentDictionary<string, CachedSpriteData>();
@@ -150,7 +118,6 @@ namespace EnhancedStreamChat.Textures
             BTTVEmoteIDs.Clear();
             FFZEmoteIDs.Clear();
             TwitchBadgeIDs.Clear();
-
             StartCoroutine(GetEmotes());
         }
         
@@ -354,7 +321,7 @@ namespace EnhancedStreamChat.Textures
                     {
                         foreach (JSONNode node in json["actions"].AsArray.Values)
                         {
-                            Cheermote cheermote = new Cheermote();
+                            TwitchCheermote cheermote = new TwitchCheermote();
                             string prefix = node["prefix"].ToString().ToLower();
                             foreach (JSONNode tier in node["tiers"].Values)
                             {

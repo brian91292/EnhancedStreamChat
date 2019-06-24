@@ -133,6 +133,8 @@
     <Compile Include="Config\ChatConfig.cs" />
     <Compile Include="Images\EmojiUtils.cs" />
     <Compile Include="Images\ImageDefinitions.cs" />
+    <Compile Include="Images\LockedBitmap.cs" />
+    <Compile Include="Images\TwitchCheermote.cs" />
     <Compile Include="UI\ColorExtensions.cs" />
     <Compile Include="Chat\ChatMover.cs" />
     <Compile Include="Chat\LockToggle.cs" />

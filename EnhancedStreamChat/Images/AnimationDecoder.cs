@@ -24,12 +24,13 @@ namespace EnhancedStreamChat.Textures
 
         class FrameInfo
         {
-            public System.Drawing.Bitmap frame;
-            public List<System.Drawing.Color> colors = new List<System.Drawing.Color>();
+            public int width, height;
+            public Color32[] colors;
             public float delay = 0;
-            public FrameInfo(System.Drawing.Bitmap frame)
+            public FrameInfo(int width, int height)
             {
-                this.frame = frame;
+                this.width = width;
+                this.height = height;
             }
         };
 
@@ -51,8 +52,8 @@ namespace EnhancedStreamChat.Textures
                 goto retry;
             }
 
-            var textureWidth = Mathf.Clamp(numFramesInRow * frameInfo.frames[i].frame.Width, 0, 2048);
-            var textureHeight = Mathf.Clamp(numFramesInColumn * frameInfo.frames[i].frame.Height, 0, 2048);
+            var textureWidth = Mathf.Clamp(numFramesInRow * frameInfo.frames[i].width, 0, 2048);
+            var textureHeight = Mathf.Clamp(numFramesInColumn * frameInfo.frames[i].height, 0, 2048);
             return Mathf.Max(textureWidth, textureHeight);
         }
 
@@ -63,17 +64,19 @@ namespace EnhancedStreamChat.Textures
             List<Texture2D> texList = new List<Texture2D>();
             GifInfo frameInfo = new GifInfo();
             DateTime startTime = DateTime.Now;
-            Task.Run(() => ProcessingThread(gifData, ref frameInfo));
+            Task.Run(() => ProcessingThread(gifData, frameInfo));
             yield return new WaitUntil(() => { return frameInfo.initialized; });
-
-
+            
             int textureSize = 2048;
             Texture2D texture = null;
             float delay = -1f;
             for (int i = 0; i < frameInfo.frameCount; i++)
             {
-                yield return new WaitUntil(() => { return frameInfo.frames.Count > i; });
-                //Plugin.Log($"Frame {i} is ready for processing! Frame is {frameInfo.frames[i].frame.Width}x{frameInfo.frames[i].frame.Height}");
+                if (frameInfo.frames.Count <= i)
+                {
+                    yield return new WaitUntil(() => { return frameInfo.frames.Count > i; });
+                    Plugin.Log($"Frame {i} is ready for processing! Frame is {frameInfo.frames[i].width}x{frameInfo.frames[i].height}");
+                }
 
                 if(texture == null)
                 {
@@ -85,22 +88,11 @@ namespace EnhancedStreamChat.Textures
                 if (delay == -1f)
                     delay = currentFrameInfo.delay;
                 
-                var frameTexture = new Texture2D(currentFrameInfo.frame.Width, currentFrameInfo.frame.Height);
+                var frameTexture = new Texture2D(currentFrameInfo.width, currentFrameInfo.height);
+                frameTexture.wrapMode = TextureWrapMode.Clamp;
                 try
                 {
-                    int colorIndex = 0;
-                    Color32[] colors = new Color32[currentFrameInfo.frame.Width * currentFrameInfo.frame.Height];
-                    for (int x = 0; x < currentFrameInfo.frame.Width; x++)
-                    {
-                        for (int y = 0; y < currentFrameInfo.frame.Height; y++)
-                        {
-                            System.Drawing.Color sourceColor = currentFrameInfo.colors[colorIndex];
-                            colors[(currentFrameInfo.frame.Height - y - 1) * currentFrameInfo.frame.Width + x] = new Color32(sourceColor.R, sourceColor.G, sourceColor.B, sourceColor.A);
-                            colorIndex++;
-                        }
-                    }
-                    frameTexture.wrapMode = TextureWrapMode.Clamp;
-                    frameTexture.SetPixels32(colors);
+                    frameTexture.SetPixels32(currentFrameInfo.colors);
                     frameTexture.Apply(i == 0);
                 }
                 catch (Exception e)
@@ -124,7 +116,7 @@ namespace EnhancedStreamChat.Textures
             Plugin.Log($"Finished decoding gif {imageDownloadInfo.spriteIndex}! Elapsed time: {(DateTime.Now - startTime).TotalSeconds} seconds.");
         }
 
-        private static void ProcessingThread(byte[] gifData, ref GifInfo frameInfo)
+        private static void ProcessingThread(byte[] gifData, GifInfo frameInfo)
         {
             var gifImage = EmojiUtilities.byteArrayToImage(gifData);
             var dimension = new System.Drawing.Imaging.FrameDimension(gifImage.FrameDimensionsList[0]);
@@ -135,19 +127,33 @@ namespace EnhancedStreamChat.Textures
             frameInfo.initialized = true;
 
             int index = 0;
+
+            List<System.Drawing.Color> colors = new List<System.Drawing.Color>();
             for (int i = 0; i < frameCount; i++)
             {
                 gifImage.SelectActiveFrame(dimension, i);
-                var frame = new System.Drawing.Bitmap(gifImage.Width, gifImage.Height);
-                System.Drawing.Graphics.FromImage(frame).DrawImage(gifImage, System.Drawing.Point.Empty);
+                System.Drawing.Bitmap bitmap = new System.Drawing.Bitmap(gifImage.Width, gifImage.Height);
+                System.Drawing.Graphics.FromImage(bitmap).DrawImage(gifImage, System.Drawing.Point.Empty);
+                LockBitmap frame = new LockBitmap(bitmap);
 
-                FrameInfo currentFrame = new FrameInfo(frame);
+                frame.LockBits();
+                FrameInfo currentFrame = new FrameInfo(bitmap.Width, bitmap.Height);
                 for (int x = 0; x < frame.Width; x++)
                 {
                     for (int y = 0; y < frame.Height; y++)
                     {
                         System.Drawing.Color sourceColor = frame.GetPixel(x, y);
-                        currentFrame.colors.Add(sourceColor);
+                        colors.Add(sourceColor);
+                    }
+                }
+                int colorIndex = 0;
+                currentFrame.colors = new Color32[frame.Height * frame.Width];
+                for (int x = 0; x < frame.Width; x++)
+                {
+                    for (int y = 0; y < frame.Height; y++)
+                    {
+                        currentFrame.colors[(frame.Height - y - 1) * frame.Width + x] = new Color32(colors[colorIndex].R, colors[colorIndex].G, colors[colorIndex].B, colors[colorIndex].A);
+                        colorIndex++;
                     }
                 }
 
@@ -160,7 +166,8 @@ namespace EnhancedStreamChat.Textures
                 frameInfo.frames.Add(currentFrame);
                 index += 4;
 
-                Thread.Sleep(25);
+                colors.Clear();
+                Thread.Sleep(3);
             }
         }
     };
