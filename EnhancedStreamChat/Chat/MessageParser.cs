@@ -195,6 +195,18 @@ namespace EnhancedStreamChat.Chat
                 }
                 Thread.Sleep(5);
             }
+            else if(newChatMessage.origMessage is YouTubeMessage)
+            {
+                if (!ImageDownloader.CachedTextures.ContainsKey(newChatMessage.origMessage.user.YouTube.profileImageUrl))
+                    ImageDownloader.Instance.Queue(new TextureDownloadInfo(newChatMessage.origMessage.user.YouTube.profileImageUrl, ImageType.YouTube_Profile, newChatMessage.origMessage.id, true));
+
+                BadgeInfo swapInfo = new BadgeInfo();
+                swapInfo.swapChar = swapChar;
+                swapInfo.textureIndex = newChatMessage.origMessage.user.YouTube.profileImageUrl;
+                swapInfo.imageType = ImageType.YouTube_Profile;
+                parsedBadges.Add(swapInfo);
+                swapChar++;
+            }
 
             string[] parts = newChatMessage.displayMsg.Split(' ');
             // Replace each emote with a unicode character from a private range; we'll draw the emote at the position of this character later on

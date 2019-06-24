@@ -42,7 +42,11 @@ namespace EnhancedStreamChat.Images
         /// <summary>
         /// Twitch cheermote
         /// </summary>
-        Cheermote
+        Cheermote,
+        /// <summary>
+        /// YouTube profile image
+        /// </summary>
+        YouTube_Profile
     };
 
     /// <summary>
@@ -50,7 +54,7 @@ namespace EnhancedStreamChat.Images
     /// </summary>
     public class ImageTypeNames
     {
-        private static readonly string[] Names = new string[] { "None", "Twitch", "BetterTwitchTV", "BetterTwitchTV", "FrankerFaceZ", "Badges", "Emojis", "Cheermotes" };
+        private static readonly string[] Names = new string[] { "None", "Twitch", "BetterTwitchTV", "BetterTwitchTV", "FrankerFaceZ", "Badges", "Emojis", "Cheermotes", "YouTube_Profile" };
 
         /// <summary>
         /// Retrieves an ImageTypeName for the provided ImageType

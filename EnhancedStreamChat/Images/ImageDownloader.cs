@@ -190,6 +190,10 @@ namespace EnhancedStreamChat.Textures
                         case ImageType.Badge:
                             yield return Download($"https://static-cdn.jtvnw.net/badges/v1/{imageDownloadInfo.spriteIndex}/3", imageDownloadInfo);
                             break;
+                        case ImageType.YouTube_Profile:
+                            Plugin.Log($"Downloading {imageDownloadInfo.spriteIndex}");
+                            yield return Download(imageDownloadInfo.spriteIndex, imageDownloadInfo);
+                            break;
                         case ImageType.Emoji:
                             yield return Download(string.Empty, imageDownloadInfo);
                             break;
@@ -232,6 +236,12 @@ namespace EnhancedStreamChat.Textures
         private static bool ImageExistsLocally(ref string imagePath, TextureDownloadInfo imageDownloadInfo, out string localFilePath)
         {
             string origImagePath = imagePath;
+
+            if (imageDownloadInfo.noCache)
+            {
+                localFilePath = "";
+                return false;
+            }
 
             string currentPath = Path.Combine(Environment.CurrentDirectory, "Cache", "Images", ImageTypeNames.Get(imageDownloadInfo.type));
             if (!Directory.Exists(currentPath))
