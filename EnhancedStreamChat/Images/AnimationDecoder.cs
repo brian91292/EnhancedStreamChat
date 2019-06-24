@@ -127,33 +127,26 @@ namespace EnhancedStreamChat.Textures
             frameInfo.initialized = true;
 
             int index = 0;
-
-            List<System.Drawing.Color> colors = new List<System.Drawing.Color>();
+            
             for (int i = 0; i < frameCount; i++)
             {
                 gifImage.SelectActiveFrame(dimension, i);
                 System.Drawing.Bitmap bitmap = new System.Drawing.Bitmap(gifImage.Width, gifImage.Height);
                 System.Drawing.Graphics.FromImage(bitmap).DrawImage(gifImage, System.Drawing.Point.Empty);
                 LockBitmap frame = new LockBitmap(bitmap);
-
+                
                 frame.LockBits();
                 FrameInfo currentFrame = new FrameInfo(bitmap.Width, bitmap.Height);
+
+                if (currentFrame.colors == null)
+                    currentFrame.colors = new Color32[frame.Height * frame.Width];
+                
                 for (int x = 0; x < frame.Width; x++)
                 {
                     for (int y = 0; y < frame.Height; y++)
                     {
                         System.Drawing.Color sourceColor = frame.GetPixel(x, y);
-                        colors.Add(sourceColor);
-                    }
-                }
-                int colorIndex = 0;
-                currentFrame.colors = new Color32[frame.Height * frame.Width];
-                for (int x = 0; x < frame.Width; x++)
-                {
-                    for (int y = 0; y < frame.Height; y++)
-                    {
-                        currentFrame.colors[(frame.Height - y - 1) * frame.Width + x] = new Color32(colors[colorIndex].R, colors[colorIndex].G, colors[colorIndex].B, colors[colorIndex].A);
-                        colorIndex++;
+                        currentFrame.colors[(frame.Height - y - 1) * frame.Width + x] = new Color32(sourceColor.R, sourceColor.G, sourceColor.B, sourceColor.A);
                     }
                 }
 
@@ -166,8 +159,7 @@ namespace EnhancedStreamChat.Textures
                 frameInfo.frames.Add(currentFrame);
                 index += 4;
 
-                colors.Clear();
-                Thread.Sleep(3);
+                Thread.Sleep(0);
             }
         }
     };
