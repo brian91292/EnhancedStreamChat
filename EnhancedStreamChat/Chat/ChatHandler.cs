@@ -22,7 +22,7 @@ using StreamCore.YouTube;
 
 namespace EnhancedStreamChat
 {
-    public class ChatHandler : MonoBehaviour
+    public class ChatHandler : MonoBehaviour, ITwitchMessageHandler
     {
         public static ChatHandler Instance = null;
         public static ConcurrentQueue<ChatMessage> RenderQueue = new ConcurrentQueue<ChatMessage>();
@@ -52,14 +52,19 @@ namespace EnhancedStreamChat
         private string _lastFontName;
         private CustomText _testMessage = null;
         private readonly WaitUntil _delay = new WaitUntil(() => { return Instance._waitForFrames == 0; });
-        private bool _hasDisplayedStatus = false;
-        private DateTime _startupTime = DateTime.Now;
+        private bool _hasDisplayedTwitchStatus = false;
+        private string _lastRoomId = String.Empty;
 
-        public static void OnLoad()
-        {
-            if (Instance) return;
-            new GameObject("EnhancedStreamChatHandler").AddComponent<ChatHandler>();
-        }
+        public bool TwitchCallbacksReady { get; set; } = false;
+        public Action<TwitchMessage> Twitch_OnPrivmsgReceived { get; set; }
+        public Action<TwitchMessage> Twitch_OnRoomstateReceived { get; set;  }
+        public Action<TwitchMessage> Twitch_OnUsernoticeReceived { get; set;  }
+        public Action<TwitchMessage> Twitch_OnUserstateReceived { get; set;  }
+        public Action<TwitchMessage> Twitch_OnClearchatReceived { get; set;  }
+        public Action<TwitchMessage> Twitch_OnClearmsgReceived { get; set;  }
+        public Action<TwitchMessage> Twitch_OnModeReceived { get; set;  }
+        public Action<TwitchMessage> Twitch_OnJoinReceived { get; set;  }
+
 
         public void Awake()
         {
@@ -72,7 +77,7 @@ namespace EnhancedStreamChat
             // Startup the texture downloader and anim controller
             ImageDownloader.OnLoad();
             AnimationController.OnLoad();
-            
+
             // Initialize the chats UI
             InitializeChatUI();
 
@@ -80,9 +85,10 @@ namespace EnhancedStreamChat
             ChatConfig.Instance.ConfigChangedEvent += ChatConfigChanged;
 
             initialized = true;
+            TwitchCallbacksReady = true;
             Plugin.Log("EnhancedStreamChat initialized");
         }
-        
+
         public void SceneManager_activeSceneChanged(Scene from, Scene to)
         {
             var vrPointers = Resources.FindObjectsOfTypeAll<VRPointer>();
@@ -132,39 +138,40 @@ namespace EnhancedStreamChat
             background.color = ChatConfig.Instance.BackgroundColor;
         }
 
+        private void HandleStatusMessages()
+        {
+            // Wait a few seconds after we've connect to the chat, then send our welcome message
+            if (!_hasDisplayedTwitchStatus && TwitchWebSocketClient.Initialized)
+            {
+                // If the last room id hasn't been set, allow up to a 30 second timeout before we throw an error
+                if (_lastRoomId == String.Empty && (DateTime.Now - TwitchWebSocketClient.ConnectionTime).TotalSeconds < 30)
+                {
+                    return;
+                }
+
+                string msg = null;
+                if (TwitchWebSocketClient.Connected && TwitchWebSocketClient.LoggedIn)
+                {
+                    if (!TwitchWebSocketClient.IsChannelValid)
+                    {
+                        msg = $"Failed to join Twitch channel \"{TwitchLoginConfig.Instance.TwitchChannelName}\". Please enter a valid Twitch channel name in the Enhanced Stream Chat settings submenu, or manually in TwitchLoginInfo.ini, then try again.";
+                    }
+                }
+                else
+                    msg = "Failed to login to Twitch! Please check your login info in UserData\\StreamCore\\TwitchLoginInfo.ini, then try again.";
+
+                if(msg != null)
+                    RenderQueue.Enqueue(new ChatMessage(msg, new GenericChatMessage()));
+
+                _hasDisplayedTwitchStatus = true;
+            }
+        }
+
         public void Update()
         {
             if (Drawing.MaterialsCached)
             {
-                // Wait a few seconds after we've connect to the chat, then send our welcome message
-                if (!_hasDisplayedStatus && TwitchWebSocketClient.Initialized && (TwitchWebSocketClient.IsChannelValid || ((DateTime.Now - _startupTime).TotalSeconds >= 10 && (DateTime.Now - TwitchWebSocketClient.ConnectionTime).TotalSeconds >= 10)))
-                {
-                    string msg;
-                    if (TwitchWebSocketClient.Connected && TwitchWebSocketClient.LoggedIn)
-                    {
-                        if (TwitchLoginConfig.Instance.TwitchChannelName == String.Empty)
-                        {
-                            msg = $"Welcome to Enhanced Stream Chat! To continue, enter your Twitch channel name in the Enhanced Stream Chat settings submenu, or manually in TwitchLoginInfo.ini, which is located in your Beat Saber\\UserData\\StreamCore directory.";
-                        }
-                        else if (TwitchWebSocketClient.IsChannelValid)
-                        {
-                            ImageDownloader.Instance.Init();
-                            msg = $"Success joining channel \"{TwitchLoginConfig.Instance.TwitchChannelName}\"";
-                        }
-                        else
-                        {
-                            msg = $"Failed to join channel \"{TwitchLoginConfig.Instance.TwitchChannelName}\". Please enter a valid Twitch channel name in the Enhanced Twitch Chat settings submenu, or manually in TwitchLoginInfo.ini, then try again.";
-                        }
-                    }
-                    else
-                        msg = "Failed to login to Twitch! Please check your login info in UserData\\StreamCore\\TwitchLoginInfo.ini, then try again.";
-
-                    //msg += $" Connected: {TwitchWebSocketClient.Connected}, LoggedIn: {TwitchWebSocketClient.LoggedIn}, ChannelValid: {TwitchWebSocketClient.IsChannelValid}, TimeDiff: {(DateTime.Now - _startupTime).TotalSeconds}";
-                    
-                    RenderQueue.Enqueue(new ChatMessage(msg, new GenericChatMessage()));
-
-                    _hasDisplayedStatus = true;
-                }
+                HandleStatusMessages();
 
                 if (_configChanged)
                     OnConfigChanged();
@@ -244,16 +251,26 @@ namespace EnhancedStreamChat
 
         private void RegisterMessageHandlers()
         {
-            YouTubeLiveChat.OnMessageReceived = (youTubeMsg) =>
+            TwitchWebSocketClient.OnConnected += () =>
             {
-                MessageParser.Parse(new ChatMessage(Utilities.EscapeHTML(youTubeMsg.message), youTubeMsg));
+                if (TwitchLoginConfig.Instance.TwitchChannelName == String.Empty)
+                {
+                    RenderQueue.Enqueue(new ChatMessage("Welcome to Enhanced Stream Chat! You must configure at least one chat service to continue, read the instructions at https://github.com/brian91292/StreamCore for more information.", new GenericChatMessage()));
+                }
+                else
+                {
+                    RenderQueue.Enqueue(new ChatMessage("Connecting to Twitch chat...", new GenericChatMessage()));
+                }
+                _hasDisplayedTwitchStatus = true;
             };
 
-            TwitchWebSocketClient.OnTwitchChannelUpdated = (newChannel) => _hasDisplayedStatus = false;
-            TwitchWebSocketClient.OnConnected = () => _hasDisplayedStatus = false;
+            TwitchWebSocketClient.OnConfigUpdated += () =>
+            {
+                _lastRoomId = String.Empty;
+                _hasDisplayedTwitchStatus = false;
+            };
 
-            // PRIVMSG handler
-            TwitchMessageHandlers.PRIVMSG = (twitchMsg) => 
+            Twitch_OnPrivmsgReceived += (twitchMsg) =>
             {
                 // Don't show any messages that aren't from the channel in the config
                 if (twitchMsg.channelName != TwitchLoginConfig.Instance.TwitchChannelName)
@@ -261,9 +278,22 @@ namespace EnhancedStreamChat
 
                 MessageParser.Parse(new ChatMessage(Utilities.EscapeHTML(twitchMsg.message), twitchMsg));
             };
-            
-            // USERNOTICE handler
-            TwitchMessageHandlers.USERNOTICE = (twitchMsg) =>
+
+            Twitch_OnRoomstateReceived += (twitchMsg) =>
+            {
+                 if (TwitchWebSocketClient.ChannelInfo.TryGetValue(twitchMsg.channelName, out var currentChannel))
+                 {
+                     if (_lastRoomId != currentChannel.roomId)
+                     {
+                        RenderQueue.Enqueue(new ChatMessage($"Success joining Twitch channel \"{TwitchLoginConfig.Instance.TwitchChannelName}\"", new GenericChatMessage()));
+                        _lastRoomId = currentChannel.roomId;
+                        ImageDownloader.Instance.Init();
+                        _hasDisplayedTwitchStatus = false;
+                     }
+                 }
+             };
+
+            Twitch_OnUsernoticeReceived += (twitchMsg) =>
             {
                 string msgId = String.Empty, systemMsg = String.Empty;
                 foreach (Match t in twitchMsg.tags)
@@ -297,8 +327,7 @@ namespace EnhancedStreamChat
                 }
             };
 
-            // USERSTATE handler
-            TwitchMessageHandlers.USERSTATE = (twitchMsg) =>
+            Twitch_OnUserstateReceived += (twitchMsg) =>
             {
                 if (!(twitchMsg.user.Twitch.isBroadcaster || twitchMsg.user.Twitch.isMod))
                 {
@@ -309,8 +338,7 @@ namespace EnhancedStreamChat
                 }
             };
 
-            // CLEARCHAT handler
-            TwitchMessageHandlers.CLEARCHAT = (twitchMsg) =>
+            Twitch_OnClearchatReceived += (twitchMsg) =>
             {
                 string userId = "!FULLCLEAR!";
                 foreach (Match t in twitchMsg.tags)
@@ -324,8 +352,7 @@ namespace EnhancedStreamChat
                 PurgeMessagesFromUser(userId);
             };
 
-            // CLEARMSG handler
-            TwitchMessageHandlers.CLEARMSG = (twitchMsg) =>
+            Twitch_OnClearmsgReceived += (twitchMsg) =>
             {
                 string msgId = String.Empty;
                 foreach (Match t in twitchMsg.tags)
@@ -338,6 +365,12 @@ namespace EnhancedStreamChat
                 }
                 if (msgId == String.Empty) return;
                 PurgeChatMessageById(msgId);
+            };
+
+
+            YouTubeLiveChat.OnMessageReceived = (youTubeMsg) =>
+            {
+                MessageParser.Parse(new ChatMessage(Utilities.EscapeHTML(youTubeMsg.message), youTubeMsg));
             };
         }
 

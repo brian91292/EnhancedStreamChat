@@ -42,34 +42,7 @@ namespace EnhancedStreamChat
             Instance = this;
             ChatConfig = new ChatConfig();
 
-            TwitchWebSocketClient.Initialize();
             YouTubeConnection.Initialize();
-            
-            SharedCoroutineStarter.instance.StartCoroutine(DelayedStartup());
-        }
-
-        private IEnumerator DelayedStartup()
-        {
-            yield return new WaitForSeconds(0.5f);
-
-            try
-            {
-                if (Utilities.IsModInstalled("EnhancedTwitchChat"))
-                {
-                    string oldFile = Path.Combine(Environment.CurrentDirectory, "Plugins", "EnhancedTwitchChat.dll.old");
-                    if (File.Exists(oldFile))
-                    {
-                        File.Delete(oldFile);
-                    }
-                    File.Move(Path.Combine(Environment.CurrentDirectory, "Plugins", "EnhancedTwitchChat.dll"), oldFile);
-                }
-            }
-            catch(Exception ex)
-            {
-                Log(ex.ToString());
-            }
-
-            ChatHandler.OnLoad();
 
             SceneManager.activeSceneChanged += SceneManager_activeSceneChanged;
             SceneManager.sceneLoaded += SceneManager_sceneLoaded;
