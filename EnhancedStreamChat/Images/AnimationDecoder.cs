@@ -1,5 +1,6 @@
 ﻿using EnhancedStreamChat.Images;
 using EnhancedStreamChat.UI;
+using StreamCore;
 using System;
 using System.Collections;
 using System.Collections.Concurrent;
@@ -18,7 +19,6 @@ namespace EnhancedStreamChat.Textures
         {
             public List<FrameInfo> frames = new List<FrameInfo>();
             public int frameCount = 0;
-            public System.Drawing.Imaging.FrameDimension dimension;
             public bool initialized = false;
         };
 
@@ -75,7 +75,7 @@ namespace EnhancedStreamChat.Textures
                 if (frameInfo.frames.Count <= i)
                 {
                     yield return new WaitUntil(() => { return frameInfo.frames.Count > i; });
-                    Plugin.Log($"Frame {i} is ready for processing! Frame is {frameInfo.frames[i].width}x{frameInfo.frames[i].height}");
+                    //Plugin.Log($"Frame {i} is ready for processing! Frame is {frameInfo.frames[i].width}x{frameInfo.frames[i].height}");
                 }
 
                 if(texture == null)
@@ -123,11 +123,9 @@ namespace EnhancedStreamChat.Textures
             int frameCount = gifImage.GetFrameCount(dimension);
 
             frameInfo.frameCount = frameCount;
-            frameInfo.dimension = dimension;
             frameInfo.initialized = true;
 
             int index = 0;
-            
             for (int i = 0; i < frameCount; i++)
             {
                 gifImage.SelectActiveFrame(dimension, i);
@@ -158,8 +156,8 @@ namespace EnhancedStreamChat.Textures
                 currentFrame.delay = (float)delayPropertyValue / 100.0f;
                 frameInfo.frames.Add(currentFrame);
                 index += 4;
-
-                Thread.Sleep(0);
+                
+                Thread.Sleep(Globals.IsAtMainMenu ? 0 : 10);
             }
         }
     };
