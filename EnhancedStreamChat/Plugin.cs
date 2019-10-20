@@ -42,8 +42,6 @@ namespace EnhancedStreamChat
             Instance = this;
             ChatConfig = new ChatConfig();
 
-            YouTubeConnection.Initialize();
-
             SceneManager.activeSceneChanged += SceneManager_activeSceneChanged;
             SceneManager.sceneLoaded += SceneManager_sceneLoaded;
         }

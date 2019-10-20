@@ -22,7 +22,7 @@ using StreamCore.YouTube;
 
 namespace EnhancedStreamChat
 {
-    public class ChatHandler : MonoBehaviour, ITwitchMessageHandler
+    public class ChatHandler : MonoBehaviour, ITwitchMessageHandler, IYouTubeMessageHandler
     {
         public static ChatHandler Instance = null;
         public static ConcurrentQueue<ChatMessage> RenderQueue = new ConcurrentQueue<ChatMessage>();
@@ -55,7 +55,7 @@ namespace EnhancedStreamChat
         private bool _hasDisplayedTwitchStatus = false;
         private string _lastRoomId = String.Empty;
 
-        public bool TwitchCallbacksReady { get; set; } = false;
+        public bool ChatCallbacksReady { get; set; } = false;
         public Action<TwitchMessage> Twitch_OnPrivmsgReceived { get; set; }
         public Action<TwitchMessage> Twitch_OnRoomstateReceived { get; set;  }
         public Action<TwitchMessage> Twitch_OnUsernoticeReceived { get; set;  }
@@ -64,7 +64,7 @@ namespace EnhancedStreamChat
         public Action<TwitchMessage> Twitch_OnClearmsgReceived { get; set;  }
         public Action<TwitchMessage> Twitch_OnModeReceived { get; set;  }
         public Action<TwitchMessage> Twitch_OnJoinReceived { get; set;  }
-
+        public Action<YouTubeMessage> YouTube_OnMessageReceived { get; set; }
 
         public void Awake()
         {
@@ -85,7 +85,7 @@ namespace EnhancedStreamChat
             ChatConfig.Instance.ConfigChangedEvent += ChatConfigChanged;
 
             initialized = true;
-            TwitchCallbacksReady = true;
+            ChatCallbacksReady = true;
             Plugin.Log("EnhancedStreamChat initialized");
         }
 
@@ -200,7 +200,7 @@ namespace EnhancedStreamChat
                             return;
                         if (ChatConfig.Instance.FilterCommandMessages && messageToSend.origMessage.message.StartsWith("!"))
                             return;
-                        if (ChatConfig.Instance.FilterSelfMessages && messageToSend.origMessage.user.id == TwitchWebSocketClient.OurTwitchUser.id) //todo, implement this for youtube
+                        if (ChatConfig.Instance.FilterSelfMessages && messageToSend.origMessage.user.id == TwitchWebSocketClient.OurTwitchUser.id) 
                             return;
 
                         if (ChatMessageFilters != null)
@@ -368,7 +368,7 @@ namespace EnhancedStreamChat
             };
 
 
-            YouTubeLiveChat.OnMessageReceived = (youTubeMsg) =>
+            YouTube_OnMessageReceived += (youTubeMsg) =>
             {
                 MessageParser.Parse(new ChatMessage(Utilities.EscapeHTML(youTubeMsg.message), youTubeMsg));
             };
