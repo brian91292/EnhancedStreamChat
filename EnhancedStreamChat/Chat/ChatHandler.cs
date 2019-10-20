@@ -19,6 +19,7 @@ using StreamCore.Utils;
 using System.Text.RegularExpressions;
 using EnhancedStreamChat.Images;
 using StreamCore.YouTube;
+using StreamCore.Twitch;
 
 namespace EnhancedStreamChat
 {

@@ -19,6 +19,7 @@ using EnhancedStreamChat.Images;
 using StreamCore.Utils;
 using StreamCore.Config;
 using StreamCore.Chat;
+using StreamCore.Twitch;
 
 namespace EnhancedStreamChat.Textures
 {

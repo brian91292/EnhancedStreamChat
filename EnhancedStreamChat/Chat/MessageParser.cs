@@ -21,6 +21,7 @@ using EnhancedStreamChat.Config;
 using EnhancedStreamChat.Textures;
 using StreamCore.Chat;
 using StreamCore.YouTube;
+using StreamCore.Twitch;
 
 namespace EnhancedStreamChat.Chat
 {
