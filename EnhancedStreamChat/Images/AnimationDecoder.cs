@@ -57,7 +57,7 @@ namespace EnhancedStreamChat.Textures
             return Mathf.Max(textureWidth, textureHeight);
         }
 
-        public static IEnumerator Process(byte[] gifData, Action<Texture2D, Rect[], float, TextureDownloadInfo> callback, TextureDownloadInfo imageDownloadInfo)
+        public static IEnumerator Process(byte[] gifData, Action<Texture2D, Rect[], float, int, int, TextureDownloadInfo> callback, TextureDownloadInfo imageDownloadInfo)
         {
             Plugin.Log($"Started decoding gif {imageDownloadInfo.spriteIndex}");
 
@@ -66,8 +66,9 @@ namespace EnhancedStreamChat.Textures
             DateTime startTime = DateTime.Now;
             Task.Run(() => ProcessingThread(gifData, frameInfo));
             yield return new WaitUntil(() => { return frameInfo.initialized; });
-            
-            int textureSize = 2048;
+
+
+            int textureSize = 2048, width = 0, height = 0;
             Texture2D texture = null;
             float delay = -1f;
             for (int i = 0; i < frameInfo.frameCount; i++)
@@ -105,14 +106,18 @@ namespace EnhancedStreamChat.Textures
                 texList.Add(frameTexture);
                 
                 // Instant callback after we decode the first frame in order to display a still image until the animated one is finished loading
-                if (i == 0)
-                   callback?.Invoke(frameTexture, texture.PackTextures(new Texture2D[] { frameTexture }, 2, textureSize, true), delay, imageDownloadInfo);
+                if (i == 0) 
+                {
+                    width = frameInfo.frames[i].width;
+                    height = frameInfo.frames[i].height;
+                    callback?.Invoke(frameTexture, texture.PackTextures(new Texture2D[] { frameTexture }, 2, textureSize, true), delay, width, height, imageDownloadInfo);
+                }
             }
             Rect[] atlas = texture.PackTextures(texList.ToArray(), 2, textureSize, true);
 
             yield return null;
 
-            callback?.Invoke(texture, atlas, delay, imageDownloadInfo);
+            callback?.Invoke(texture, atlas, delay, width, height, imageDownloadInfo);
             Plugin.Log($"Finished decoding gif {imageDownloadInfo.spriteIndex}! Elapsed time: {(DateTime.Now - startTime).TotalSeconds} seconds.");
         }
 

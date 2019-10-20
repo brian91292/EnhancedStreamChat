@@ -1,7 +1,10 @@
-﻿using System;
+﻿using EnhancedStreamChat.Textures;
+using EnhancedStreamChat.UI;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace EnhancedStreamChat.Images
@@ -72,6 +75,48 @@ namespace EnhancedStreamChat.Images
         public char swapChar;
         public string textureIndex;
         public ImageType imageType;
+        private CachedSpriteData _cachedSprite = null;
+        public CachedSpriteData cachedSprite
+        {
+            get
+            {
+                if(_cachedSprite == null || (_cachedSprite.sprite == null && _cachedSprite.animInfo == null))
+                    ImageDownloader.CachedTextures.TryGetValue(textureIndex, out _cachedSprite);
+                return _cachedSprite;
+            }
+        }
+        public Task<CachedSpriteData> GetCachedSprite()
+        {
+            return Task.Run(() => {
+                var sprite = cachedSprite;
+                if (sprite == null)
+                {
+                    while (!ImageDownloader.CachedTextures.TryGetValue(textureIndex, out _cachedSprite))
+                    {
+                        Thread.Sleep(0);
+                    }
+                    while(_cachedSprite.sprite == null && _cachedSprite.animInfo == null)
+                    {
+                        Thread.Sleep(0);
+                    }
+                }
+                return _cachedSprite;
+            });
+        }
+        //private string _spacingString = "\u200A";
+        //public string spacingString
+        //{
+        //    get
+        //    {
+        //        var sprite = cachedSprite;
+        //        if (sprite != null)
+        //        {
+        //            var count = (int)Math.Floor(sprite.width * 0.064f / Drawing.imageSpacingWidth);
+        //            _spacingString = new StringBuilder(Drawing.spacingChar.Length * count).Insert(0, Drawing.spacingChar, count).ToString();
+        //        }
+        //        return spacingString;
+        //    }
+        //}
     }
 
     public class BadgeInfo : ImageInfo

@@ -68,7 +68,7 @@ namespace EnhancedStreamChat.UI
         public static Material noGlowMaterial = null;
         public static Material noGlowMaterialUI = null;
         public static Material clearMaterial = null;
-        public static string imageSpacing;
+        public static readonly string spacingChar = "\u200A";
         public static float imageSpacingWidth;
 
         public static bool MaterialsCached
@@ -129,17 +129,10 @@ namespace EnhancedStreamChat.UI
 
         public static IEnumerator Initialize(Transform parent)
         {
-            var tmpImageSpacing = "\u200A";
-            CustomText tmpText = InitText(tmpImageSpacing, Color.clear, ChatConfig.Instance.ChatScale, new Vector2(ChatConfig.Instance.ChatWidth, 1), new Vector3(0, -100, 0), new Quaternion(0, 0, 0, 0), parent, TextAnchor.UpperLeft, false);
+            CustomText tmpText = InitText(spacingChar, Color.clear, ChatConfig.Instance.ChatScale, new Vector2(ChatConfig.Instance.ChatWidth, 1), new Vector3(0, -100, 0), new Quaternion(0, 0, 0, 0), parent, TextAnchor.UpperLeft, false);
             yield return null;
-            while (tmpText.preferredWidth < 5.3f)
-            {
-                tmpText.text += "\u200A";
-                yield return null;
-            }
             imageSpacingWidth = tmpText.preferredWidth;
             //Plugin.Log($"Preferred width was {tmpText.preferredWidth.ToString()} with {tmpText.text.Length.ToString()} spaces");
-            imageSpacing = tmpText.text;
             GameObject.Destroy(tmpText.gameObject);
         }
 
@@ -207,7 +200,7 @@ namespace EnhancedStreamChat.UI
         
         public static void OverlayImage(CustomText currentMessage, ImageInfo imageInfo)
         {
-            CachedSpriteData cachedTextureData = ImageDownloader.CachedTextures.ContainsKey(imageInfo.textureIndex) ? ImageDownloader.CachedTextures[imageInfo.textureIndex] : null;
+            CachedSpriteData cachedTextureData = imageInfo.cachedSprite;
 
             // If cachedTextureData is null, the emote will be overlayed at a later time once it's finished being cached
             if (cachedTextureData == null || (cachedTextureData.sprite == null && cachedTextureData.animInfo == null))
@@ -232,7 +225,7 @@ namespace EnhancedStreamChat.UI
                         
                         image.rectTransform.SetParent(currentMessage.rectTransform, false);
 
-                        float aspectRatio = cachedTextureData.width / cachedTextureData.height;
+                        float aspectRatio = cachedTextureData.aspectRatio;
                         if (aspectRatio > 1)
                             image.rectTransform.localScale = new Vector3(0.064f * aspectRatio, 0.064f, 0.064f); 
                         else
@@ -240,8 +233,8 @@ namespace EnhancedStreamChat.UI
 
                         TextGenerator textGen = currentMessage.cachedTextGenerator;
                         Vector3 pos = new Vector3(textGen.verts[i * 4 + 3].position.x, textGen.verts[i * 4 + 3].position.y);
-                        image.rectTransform.position = currentMessage.gameObject.transform.TransformPoint(pos / pixelsPerUnit - new Vector3(cachedTextureData.width / pixelsPerUnit + 2.5f, cachedTextureData.height / pixelsPerUnit + 1f) + new Vector3(0,0,-0.1f));
-                        image.rectTransform.localPosition -= new Vector3(imageSpacingWidth/2.3f, 0);
+                        image.rectTransform.position = currentMessage.gameObject.transform.TransformPoint(pos / pixelsPerUnit - new Vector3(0, cachedTextureData.height / pixelsPerUnit + 1f) + new Vector3(0,0,-0.1f));
+                        //image.rectTransform.localPosition -= new Vector3(imageSpacingWidth/2.3f, 0);
 
                         if (animatedEmote)
                         {

@@ -524,7 +524,7 @@ namespace EnhancedStreamChat
             }
         }
 
-        public void OverlayAnimatedImage(Texture2D texture, Rect[] uvs, float delay, TextureDownloadInfo imageDownloadInfo)
+        public void OverlayAnimatedImage(Texture2D texture, Rect[] uvs, float delay, int width, int height, TextureDownloadInfo imageDownloadInfo)
         {
             try
             {
@@ -552,8 +552,7 @@ namespace EnhancedStreamChat
                 }
 
                 // Setup our CachedTextureData and CachedAnimationData, registering the animation if there is more than one uv in the array
-                ImageDownloader.CachedTextures[spriteIndex] = new CachedSpriteData(null, uvs[0].width, uvs[0].height);
-                ImageDownloader.CachedTextures[spriteIndex].animInfo = new CachedAnimationData(uvs.Length > 1 ? AnimationController.Instance.Register(spriteIndex, uvs, delay) : 0, texture, uvs, delay);
+                ImageDownloader.CachedTextures[spriteIndex] = new CachedSpriteData(new CachedAnimationData(uvs.Length > 1 ? AnimationController.Instance.Register(spriteIndex, uvs, delay) : 0, texture, uvs, delay), width, height);
 
                 if (ChatConfig.Instance.DrawShadows)
                 {

@@ -31,7 +31,7 @@ namespace EnhancedStreamChat.Chat
         private static readonly Regex _badgeRegex = new Regex(@"(?<BadgeName>[a-z,0-9,_-]+)\/(?<BadgeVersion>[^,^;]+),*", RegexOptions.Compiled);
 
         private static Dictionary<int, string> _userColors = new Dictionary<int, string>();
-        public static void Parse(ChatMessage newChatMessage)
+        public static async void Parse(ChatMessage newChatMessage)
         {
             // Setup local variables
             char swapChar = (char)0xE000;
@@ -213,6 +213,7 @@ namespace EnhancedStreamChat.Chat
             // Replace each emote with a unicode character from a private range; we'll draw the emote at the position of this character later on
             foreach (EmoteInfo e in parsedEmotes.Where(e => !e.isEmoji))
             {
+                var cachedSprite = await e.GetCachedSprite();
                 string extraInfo = String.Empty;
                 if (e.imageType == ImageType.Cheermote)
                 {
@@ -221,8 +222,9 @@ namespace EnhancedStreamChat.Chat
                     string numBits = cheermote.Groups["Value"].Value;
                     extraInfo = $"\u200A<color={ImageDownloader.TwitchCheermoteIDs[cheermote.Groups["Prefix"].Value].GetColor(Convert.ToInt32(numBits))}>\u200A<size=3><b>{numBits}</b></size></color>\u200A";
                 }
+
                 // Replace any instances of the swapString we find in the message
-                string replaceString = $"\u00A0{Drawing.imageSpacing}{Char.ConvertFromUtf32(e.swapChar)}{extraInfo}";
+                string replaceString = $"\u00A0{Char.ConvertFromUtf32(e.swapChar)}{new string(Drawing.spacingChar[0], (int)Math.Floor(cachedSprite.width * ChatConfig.Instance.ChatScale * 0.064f / Drawing.imageSpacingWidth))}{extraInfo}";
                 for (int i = 0; i < parts.Length; i++)
                 {
                     if (parts[i] == e.swapString)
@@ -233,7 +235,10 @@ namespace EnhancedStreamChat.Chat
             // Then replace our emojis after all the emotes are handled, since these aren't sensitive to spacing
             StringBuilder sb = new StringBuilder(string.Join(" ", parts));
             foreach (EmoteInfo e in parsedEmotes.Where(e => e.isEmoji))
-                sb.Replace(e.swapString, $"\u00A0{Drawing.imageSpacing}{Char.ConvertFromUtf32(e.swapChar)}");
+            {
+                var cachedSprite = await e.GetCachedSprite();
+                sb.Replace(e.swapString, $"\u00A0{Char.ConvertFromUtf32(e.swapChar)}{new string(Drawing.spacingChar[0], (int)Math.Floor(cachedSprite.width * ChatConfig.Instance.ChatScale* 0.064f / Drawing.imageSpacingWidth))}");
+            }
             newChatMessage.displayMsg = sb.ToString();
 
             Thread.Sleep(5);
@@ -274,7 +279,10 @@ namespace EnhancedStreamChat.Chat
             {
                 parsedBadges.Reverse();
                 for (int i = 0; i < parsedBadges.Count; i++)
-                    badgeStr.Insert(0, $"\u200A{Drawing.imageSpacing}{Char.ConvertFromUtf32(parsedBadges[i].swapChar)}\u2004");
+                {
+                    var cachedSprite = await parsedBadges[i].GetCachedSprite();
+                    badgeStr.Insert(0, $"\u200A{Char.ConvertFromUtf32(parsedBadges[i].swapChar)}{new string(Drawing.spacingChar[0], (int)Math.Floor(cachedSprite.width * ChatConfig.Instance.ChatScale * 0.064f / Drawing.imageSpacingWidth))}\u2004");
+                }
             }
             badgeStr.Append("\u200A");
             badgeStr.Append(newChatMessage.displayMsg);

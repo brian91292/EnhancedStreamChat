@@ -47,6 +47,22 @@ namespace EnhancedStreamChat.Textures
         public CachedAnimationData animInfo = null;
         public float width;
         public float height;
+        public float aspectRatio
+        {
+            get
+            {
+                if(height > 0)
+                    return width / height;
+                return 1;
+            }
+        }
+
+        public CachedSpriteData(CachedAnimationData animInfo, float width, float height)
+        {
+            this.animInfo = animInfo;
+            this.width = width;
+            this.height = height;
+        }
 
         public CachedSpriteData(Sprite sprite, float width, float height)
         {
