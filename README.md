@@ -2,8 +2,9 @@
 Enhanced Stream Chat is a rich text stream chat integration mod (currently supports Twitch) with full unicode, emote, cheermote, and emoji support.
 
 # Features
-- Full Rich Text Support, see ALL of your Twitch chat when immersed in Beat Saber!
-  - This includes all Twitch badges, emotes, cheermotes, BetterTwitchTV emotes, FrankerFaceZ emotes, all Emojis and even animated emotes!
+- Full Rich Text Support, see ALL of your Twitch/YouTube chat while immersed in VR!
+  - This includes all Twitch badges, emotes, cheermotes, BetterTwitchTV emotes, FrankerFaceZ emotes, all Emojis (provided by [twemoji](https://github.com/twitter/twemoji)) and even animated emotes!
+  - On YouTube, the users profile image will be shown alongside their username.
   - This also includes full Unicode Support! This means you can enjoy the chat in any language!
 
 # Dependencies
