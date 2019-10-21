@@ -322,15 +322,7 @@ namespace EnhancedStreamChat.Textures
         {
             Plugin.Log($"Downloading twitch cheermote listing");
             int emotesCached = 0;
-            yield return Utilities.Download("https://api.twitch.tv/kraken/bits/actions", Utilities.DownloadType.Raw, 
-                // BeforeSend
-                (web) =>
-                {
-                    web.SetRequestHeader("Accept", "application/vnd.twitchtv.v5+json");
-                    web.SetRequestHeader("Channel-ID", TwitchLoginConfig.Instance.TwitchChannelName);
-                    web.SetRequestHeader("Client-ID", "jg6ij5z8mf8jr8si22i5uq8tobnmde");
-                },
-                // DownloadCompleted
+            yield return Utilities.Download($"https://api.twitch.tv/v5/bits/actions?client_id=jg6ij5z8mf8jr8si22i5uq8tobnmde&channel_id={TwitchWebSocketClient.ChannelInfo[TwitchLoginConfig.Instance.TwitchChannelName].roomId}&include_sponsored=1", Utilities.DownloadType.Raw, null,
                 (web) =>
                 {
                     JSONNode json = JSON.Parse(web.downloadHandler.text);
@@ -378,7 +370,9 @@ namespace EnhancedStreamChat.Textures
                             string versionID = version.Key;
                             string url = versionObject["image_url_4x"];
                             string index = url.Substring(url.IndexOf("/v1/") + 4).Replace("/3", "");
-                            TwitchBadgeIDs.TryAdd($"{name}{versionID}", index);
+                            string finalName = $"{name}{versionID}";
+                            //Plugin.Log($"Badge: {finalName}, URL: {url}");
+                            TwitchBadgeIDs.TryAdd(finalName, index);
                             emotesCached++;
                         }
                     }
@@ -416,6 +410,7 @@ namespace EnhancedStreamChat.Textures
                                 Plugin.Log("Replaced default sub icon!");
                             }
                         }
+                        //Plugin.Log($"Badge: {finalName}");
                         emotesCached++;
                     }
                 }
@@ -440,7 +435,7 @@ namespace EnhancedStreamChat.Textures
                             if (o["imageType"] != "gif")
                                 BTTVEmoteIDs.TryAdd(o["code"], o["id"]);
                             else
-                                ImageDownloader.BTTVAnimatedEmoteIDs.TryAdd(o["code"], o["id"]);
+                                BTTVAnimatedEmoteIDs.TryAdd(o["code"], o["id"]);
                             emotesCached++;
                         }
                     }
@@ -464,7 +459,7 @@ namespace EnhancedStreamChat.Textures
                         if (o["imageType"] != "gif")
                             BTTVEmoteIDs.TryAdd(o["code"], o["id"]);
                         else
-                            ImageDownloader.BTTVAnimatedEmoteIDs.TryAdd(o["code"], o["id"]);
+                            BTTVAnimatedEmoteIDs.TryAdd(o["code"], o["id"]);
                         emotesCached++;
                     }
                 }

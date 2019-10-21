@@ -213,7 +213,7 @@ namespace EnhancedStreamChat.Chat
             // Replace each emote with a unicode character from a private range; we'll draw the emote at the position of this character later on
             foreach (EmoteInfo e in parsedEmotes.Where(e => !e.isEmoji))
             {
-                var cachedSprite = await e.GetCachedSprite();
+                var cachedSprite = e.GetCachedSprite();
                 string extraInfo = String.Empty;
                 if (e.imageType == ImageType.Cheermote)
                 {
@@ -224,7 +224,7 @@ namespace EnhancedStreamChat.Chat
                 }
 
                 // Replace any instances of the swapString we find in the message
-                string replaceString = $"\u00A0{Char.ConvertFromUtf32(e.swapChar)}{new string(Drawing.spacingChar[0], (int)Math.Floor(cachedSprite.width * ChatConfig.Instance.ChatScale * 0.064f / Drawing.imageSpacingWidth))}{extraInfo}";
+                string replaceString = $"\ufeff{Char.ConvertFromUtf32(e.swapChar)}{e.spacingString}{extraInfo}";
                 for (int i = 0; i < parts.Length; i++)
                 {
                     if (parts[i] == e.swapString)
@@ -236,8 +236,8 @@ namespace EnhancedStreamChat.Chat
             StringBuilder sb = new StringBuilder(string.Join(" ", parts));
             foreach (EmoteInfo e in parsedEmotes.Where(e => e.isEmoji))
             {
-                var cachedSprite = await e.GetCachedSprite();
-                sb.Replace(e.swapString, $"\u00A0{Char.ConvertFromUtf32(e.swapChar)}{new string(Drawing.spacingChar[0], (int)Math.Floor(cachedSprite.width * ChatConfig.Instance.ChatScale* 0.064f / Drawing.imageSpacingWidth))}");
+                var cachedSprite = e.GetCachedSprite();
+                sb.Replace(e.swapString, $"{Char.ConvertFromUtf32(e.swapChar)}{e.spacingString}");
             }
             newChatMessage.displayMsg = sb.ToString();
 
@@ -278,13 +278,13 @@ namespace EnhancedStreamChat.Chat
             if (parsedBadges.Count > 0)
             {
                 parsedBadges.Reverse();
-                for (int i = 0; i < parsedBadges.Count; i++)
+                foreach (BadgeInfo b in parsedBadges)
                 {
-                    var cachedSprite = await parsedBadges[i].GetCachedSprite();
-                    badgeStr.Insert(0, $"\u200A{Char.ConvertFromUtf32(parsedBadges[i].swapChar)}{new string(Drawing.spacingChar[0], (int)Math.Floor(cachedSprite.width * ChatConfig.Instance.ChatScale * 0.064f / Drawing.imageSpacingWidth))}\u2004");
+                    var cachedSprite = b.GetCachedSprite();
+                    badgeStr.Insert(0, $"\u00A0{Char.ConvertFromUtf32(b.swapChar)}{b.spacingString}");
                 }
             }
-            badgeStr.Append("\u200A");
+            badgeStr.Append("\u00A0");
             badgeStr.Append(newChatMessage.displayMsg);
 
             // Finally, store our final message, parsedEmotes and parsedBadges; then render the message

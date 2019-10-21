@@ -85,38 +85,36 @@ namespace EnhancedStreamChat.Images
                 return _cachedSprite;
             }
         }
-        public Task<CachedSpriteData> GetCachedSprite()
+        public CachedSpriteData GetCachedSprite()
         {
-            return Task.Run(() => {
-                var sprite = cachedSprite;
-                if (sprite == null)
+            var sprite = cachedSprite;
+            if (sprite == null)
+            {
+                while (!ImageDownloader.CachedTextures.TryGetValue(textureIndex, out _cachedSprite))
                 {
-                    while (!ImageDownloader.CachedTextures.TryGetValue(textureIndex, out _cachedSprite))
-                    {
-                        Thread.Sleep(0);
-                    }
-                    while(_cachedSprite.sprite == null && _cachedSprite.animInfo == null)
-                    {
-                        Thread.Sleep(0);
-                    }
+                    Thread.Sleep(0);
                 }
-                return _cachedSprite;
-            });
+                while (_cachedSprite.sprite == null && _cachedSprite.animInfo == null)
+                {
+                    Thread.Sleep(0);
+                }
+            }
+            return _cachedSprite;
         }
-        //private string _spacingString = "\u200A";
-        //public string spacingString
-        //{
-        //    get
-        //    {
-        //        var sprite = cachedSprite;
-        //        if (sprite != null)
-        //        {
-        //            var count = (int)Math.Floor(sprite.width * 0.064f / Drawing.imageSpacingWidth);
-        //            _spacingString = new StringBuilder(Drawing.spacingChar.Length * count).Insert(0, Drawing.spacingChar, count).ToString();
-        //        }
-        //        return spacingString;
-        //    }
-        //}
+        public string spacingString
+        {
+            get
+            {
+                string _spacingString = "\u202f";
+                var sprite = cachedSprite;
+                if (sprite != null && _spacingString == "\u202f")
+                {
+                    var count = (int)Math.Floor(sprite.width * 0.064f / Drawing.imageSpacingWidth);
+                    _spacingString = new StringBuilder(Drawing.spacingChar.Length * count).Insert(0, Drawing.spacingChar, count).ToString();
+                }
+                return _spacingString;
+            }
+        }
     }
 
     public class BadgeInfo : ImageInfo

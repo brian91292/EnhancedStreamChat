@@ -68,7 +68,7 @@ namespace EnhancedStreamChat.UI
         public static Material noGlowMaterial = null;
         public static Material noGlowMaterialUI = null;
         public static Material clearMaterial = null;
-        public static readonly string spacingChar = "\u200A";
+        public static readonly string spacingChar = "\u202f";
         public static float imageSpacingWidth;
 
         public static bool MaterialsCached
@@ -225,15 +225,13 @@ namespace EnhancedStreamChat.UI
                         
                         image.rectTransform.SetParent(currentMessage.rectTransform, false);
 
-                        float aspectRatio = cachedTextureData.aspectRatio;
-                        if (aspectRatio > 1)
-                            image.rectTransform.localScale = new Vector3(0.064f * aspectRatio, 0.064f, 0.064f); 
-                        else
-                            image.rectTransform.localScale = new Vector3(0.064f, 0.064f, 0.064f);
+                        //float aspectRatio = cachedTextureData.aspectRatio;
+                        image.rectTransform.localScale = new Vector3(0.064f, 0.064f, 0.064f);
+                        image.rectTransform.sizeDelta = new Vector2(cachedTextureData.width, cachedTextureData.height);
 
                         TextGenerator textGen = currentMessage.cachedTextGenerator;
                         Vector3 pos = new Vector3(textGen.verts[i * 4 + 3].position.x, textGen.verts[i * 4 + 3].position.y);
-                        image.rectTransform.position = currentMessage.gameObject.transform.TransformPoint(pos / pixelsPerUnit - new Vector3(0, cachedTextureData.height / pixelsPerUnit + 1f) + new Vector3(0,0,-0.1f));
+                        image.rectTransform.position = currentMessage.gameObject.transform.TransformPoint(pos / pixelsPerUnit - new Vector3(0, cachedTextureData.height / pixelsPerUnit) + new Vector3(0,0,-0.1f));
                         //image.rectTransform.localPosition -= new Vector3(imageSpacingWidth/2.3f, 0);
 
                         if (animatedEmote)

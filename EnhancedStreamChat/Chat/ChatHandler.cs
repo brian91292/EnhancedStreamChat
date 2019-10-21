@@ -201,7 +201,7 @@ namespace EnhancedStreamChat
                             return;
                         if (ChatConfig.Instance.FilterCommandMessages && messageToSend.origMessage.message.StartsWith("!"))
                             return;
-                        if (ChatConfig.Instance.FilterSelfMessages && messageToSend.origMessage.user.id == TwitchWebSocketClient.OurTwitchUser.id) 
+                        if (ChatConfig.Instance.FilterSelfMessages && messageToSend.origMessage.user.id == TwitchWebSocketClient.OurTwitchUser.id)
                             return;
 
                         if (ChatMessageFilters != null)
@@ -225,7 +225,9 @@ namespace EnhancedStreamChat
                 }
                 // Save images to file when we're at the main menu
                 else if (Globals.IsAtMainMenu && ImageDownloader.ImageSaveQueue.Count > 0 && ImageDownloader.ImageSaveQueue.TryDequeue(out var saveInfo))
+                {
                     File.WriteAllBytes(saveInfo.path, saveInfo.data);
+                }
             }
         }
 
@@ -282,17 +284,16 @@ namespace EnhancedStreamChat
 
             Twitch_OnRoomstateReceived += (twitchMsg) =>
             {
-                 if (TwitchWebSocketClient.ChannelInfo.TryGetValue(twitchMsg.channelName, out var currentChannel))
-                 {
-                     if (_lastRoomId != currentChannel.roomId)
-                     {
-                        RenderQueue.Enqueue(new ChatMessage($"Success joining Twitch channel \"{TwitchLoginConfig.Instance.TwitchChannelName}\"", new GenericChatMessage()));
+                if (TwitchWebSocketClient.ChannelInfo.TryGetValue(twitchMsg.channelName, out var currentChannel))
+                {
+                    if (_lastRoomId != currentChannel.roomId)
+                    {
                         _lastRoomId = currentChannel.roomId;
+                        RenderQueue.Enqueue(new ChatMessage($"Success joining Twitch channel \"{TwitchLoginConfig.Instance.TwitchChannelName}\"", new GenericChatMessage()));
                         ImageDownloader.Instance.Init();
-                        _hasDisplayedTwitchStatus = false;
-                     }
-                 }
-             };
+                    }
+                }
+            };
 
             Twitch_OnUsernoticeReceived += (twitchMsg) =>
             {
@@ -458,6 +459,12 @@ namespace EnhancedStreamChat
             {
                 int index = ChatConfig.Instance.ReverseChatOrder ? _testMessage.cachedTextGenerator.lineCount - 1 - i : i;
                 msg = _testMessage.text.Substring(_testMessage.cachedTextGenerator.lines[index].startCharIdx);
+
+                if(msg.IsAllWhitespace())
+                {
+                    continue;
+                }
+
                 if (index < _testMessage.cachedTextGenerator.lineCount - 1)
                     msg = msg.Substring(0, _testMessage.cachedTextGenerator.lines[index + 1].startCharIdx - _testMessage.cachedTextGenerator.lines[index].startCharIdx);
 
