@@ -27,8 +27,8 @@ namespace EnhancedStreamChat.Chat
 {
     public class MessageParser : MonoBehaviour
     {
-        private static readonly Regex _emoteRegex = new Regex(@"(?<EmoteIndex>[0-9]+):(?<StartIndex>[^-]+)-(?<EndIndex>[^,^\/\s^;]+)", RegexOptions.Compiled);
-        private static readonly Regex _badgeRegex = new Regex(@"(?<BadgeName>[a-z,0-9,_-]+)\/(?<BadgeVersion>[^,^;]+),*", RegexOptions.Compiled);
+        private static readonly Regex _emoteRegex = new Regex(@"(?<EmoteIndex>[0-9]+):(?<StartIndex>[0-9]+)-(?<EndIndex>[0-9]+)", RegexOptions.Compiled);
+        private static readonly Regex _badgeRegex = new Regex(@"(?<BadgeName>[^,\/]+)\/(?<BadgeVersion>[^,;]+)", RegexOptions.Compiled);
 
         private static Dictionary<int, string> _userColors = new Dictionary<int, string>();
         public static async void Parse(ChatMessage newChatMessage)
