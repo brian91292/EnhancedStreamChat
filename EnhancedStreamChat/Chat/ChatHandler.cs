@@ -23,7 +23,7 @@ using StreamCore.Twitch;
 
 namespace EnhancedStreamChat
 {
-    public class ChatHandler : MonoBehaviour, ITwitchMessageHandler, IYouTubeMessageHandler
+    public class ChatHandler : MonoBehaviour, ITwitchMessageHandler, IGlobalMessageHandler
     {
         public static ChatHandler Instance = null;
         public static ConcurrentQueue<ChatMessage> RenderQueue = new ConcurrentQueue<ChatMessage>();
@@ -58,14 +58,16 @@ namespace EnhancedStreamChat
 
         public bool ChatCallbacksReady { get; set; } = false;
         public Action<TwitchMessage> Twitch_OnPrivmsgReceived { get; set; }
-        public Action<TwitchMessage> Twitch_OnRoomstateReceived { get; set;  }
-        public Action<TwitchMessage> Twitch_OnUsernoticeReceived { get; set;  }
-        public Action<TwitchMessage> Twitch_OnUserstateReceived { get; set;  }
-        public Action<TwitchMessage> Twitch_OnClearchatReceived { get; set;  }
-        public Action<TwitchMessage> Twitch_OnClearmsgReceived { get; set;  }
-        public Action<TwitchMessage> Twitch_OnModeReceived { get; set;  }
-        public Action<TwitchMessage> Twitch_OnJoinReceived { get; set;  }
-        public Action<YouTubeMessage> YouTube_OnMessageReceived { get; set; }
+        public Action<TwitchMessage, TwitchChannel> Twitch_OnRoomstateReceived { get; set; }
+        public Action<TwitchMessage> Twitch_OnUsernoticeReceived { get; set; }
+        public Action<TwitchMessage> Twitch_OnClearchatReceived { get; set; }
+        public Action<TwitchMessage> Twitch_OnClearmsgReceived { get; set; }
+        public Action<TwitchMessage> Twitch_OnModeReceived { get; set; }
+        public Action<TwitchMessage> Twitch_OnJoinReceived { get; set; }
+        public Action<TwitchMessage> Twitch_OnUserstateReceived { get; set; }
+        public Action<GenericChatMessage> Global_OnMessageReceived { get; set; }
+        public Action<GenericChatMessage> Global_OnSingleMessageDeleted { get; set; }
+        public Action<GenericChatMessage> Global_OnAllMessagesDeleted { get; set; }
 
         public void Awake()
         {
@@ -273,28 +275,34 @@ namespace EnhancedStreamChat
                 _hasDisplayedTwitchStatus = false;
             };
 
-            Twitch_OnPrivmsgReceived += (twitchMsg) =>
+            Global_OnMessageReceived += (genericMessage) =>
             {
-                // Don't show any messages that aren't from the channel in the config
-                if (twitchMsg.channelName != TwitchLoginConfig.Instance.TwitchChannelName)
-                    return;
-
-                MessageParser.Parse(new ChatMessage(Utilities.EscapeHTML(twitchMsg.message), twitchMsg));
-            };
-
-            Twitch_OnRoomstateReceived += (twitchMsg) =>
-            {
-                if (TwitchWebSocketClient.ChannelInfo.TryGetValue(twitchMsg.channelName, out var currentChannel))
+                if(genericMessage is TwitchMessage)
                 {
-                    if (_lastRoomId != currentChannel.roomId)
-                    {
-                        _lastRoomId = currentChannel.roomId;
-                        RenderQueue.Enqueue(new ChatMessage($"Success joining Twitch channel \"{TwitchLoginConfig.Instance.TwitchChannelName}\"", new GenericChatMessage()));
-                        ImageDownloader.Instance.Init();
-                    }
+                    var twitchMsg = genericMessage.Twitch;
+                    // Don't show any messages that aren't from the channel in the config
+                    if (twitchMsg.channelName != TwitchLoginConfig.Instance.TwitchChannelName)
+                        return;
+
+                    MessageParser.Parse(new ChatMessage(Utilities.EscapeHTML(twitchMsg.message), twitchMsg));
+                }
+                else if(genericMessage is YouTubeMessage)
+                {
+                    var youTubeMsg = genericMessage.YouTube;
+                    MessageParser.Parse(new ChatMessage(Utilities.EscapeHTML(youTubeMsg.message), youTubeMsg));
                 }
             };
 
+            Twitch_OnRoomstateReceived += (twitchMsg, twitchChannel) =>
+            {
+                if (_lastRoomId != twitchChannel.roomId)
+                {
+                    _lastRoomId = twitchChannel.roomId;
+                    RenderQueue.Enqueue(new ChatMessage($"Success joining Twitch channel \"{TwitchLoginConfig.Instance.TwitchChannelName}\"", new GenericChatMessage()));
+                    ImageDownloader.Instance.Init();
+                }
+            };
+            
             Twitch_OnUsernoticeReceived += (twitchMsg) =>
             {
                 string msgId = String.Empty, systemMsg = String.Empty;
@@ -367,12 +375,6 @@ namespace EnhancedStreamChat
                 }
                 if (msgId == String.Empty) return;
                 PurgeChatMessageById(msgId);
-            };
-
-
-            YouTube_OnMessageReceived += (youTubeMsg) =>
-            {
-                MessageParser.Parse(new ChatMessage(Utilities.EscapeHTML(youTubeMsg.message), youTubeMsg));
             };
         }
 
