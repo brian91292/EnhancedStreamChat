@@ -17,7 +17,6 @@ namespace EnhancedStreamChat.Chat
         public GenericChatMessage origMessage;
         public List<EmoteInfo> parsedEmotes = new List<EmoteInfo>();
         public List<BadgeInfo> parsedBadges = new List<BadgeInfo>();
-        public bool isActionMessage = false;
 
         public ChatMessage(string msg, GenericChatMessage messageInfo)
         {
