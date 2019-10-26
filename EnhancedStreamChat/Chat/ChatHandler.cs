@@ -147,7 +147,7 @@ namespace EnhancedStreamChat
             if (!_hasDisplayedTwitchStatus && TwitchWebSocketClient.Initialized)
             {
                 // If the last room id hasn't been set, allow up to a 30 second timeout before we throw an error
-                if (_lastRoomId == String.Empty && (DateTime.Now - TwitchWebSocketClient.ConnectionTime).TotalSeconds < 30)
+                if ((DateTime.Now - TwitchWebSocketClient.ConnectionTime).TotalSeconds < 30)
                 {
                     return;
                 }
@@ -299,6 +299,7 @@ namespace EnhancedStreamChat
                 {
                     _lastRoomId = twitchChannel.roomId;
                     RenderQueue.Enqueue(new ChatMessage($"Success joining Twitch channel \"{TwitchLoginConfig.Instance.TwitchChannelName}\"", new GenericChatMessage()));
+                    _hasDisplayedTwitchStatus = true;
                     ImageDownloader.Instance.Init();
                 }
             };
