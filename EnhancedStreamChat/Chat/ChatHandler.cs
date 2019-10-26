@@ -20,10 +20,11 @@ using System.Text.RegularExpressions;
 using EnhancedStreamChat.Images;
 using StreamCore.YouTube;
 using StreamCore.Twitch;
+using System.Text;
 
 namespace EnhancedStreamChat
 {
-    public class ChatHandler : MonoBehaviour, ITwitchMessageHandler, IGlobalMessageHandler
+    public class ChatHandler : MonoBehaviour, ITwitchIntegration, IYouTubeIntegration
     {
         public static ChatHandler Instance = null;
         public static ConcurrentQueue<ChatMessage> RenderQueue = new ConcurrentQueue<ChatMessage>();
@@ -56,18 +57,7 @@ namespace EnhancedStreamChat
         private bool _hasDisplayedTwitchStatus = false;
         private string _lastRoomId = String.Empty;
 
-        public bool ChatCallbacksReady { get; set; } = false;
-        public Action<TwitchMessage> Twitch_OnPrivmsgReceived { get; set; }
-        public Action<TwitchMessage, TwitchChannel> Twitch_OnRoomstateReceived { get; set; }
-        public Action<TwitchMessage> Twitch_OnUsernoticeReceived { get; set; }
-        public Action<TwitchMessage> Twitch_OnClearchatReceived { get; set; }
-        public Action<TwitchMessage> Twitch_OnClearmsgReceived { get; set; }
-        public Action<TwitchMessage> Twitch_OnModeReceived { get; set; }
-        public Action<TwitchMessage> Twitch_OnJoinReceived { get; set; }
-        public Action<TwitchMessage> Twitch_OnUserstateReceived { get; set; }
-        public Action<GenericChatMessage> Global_OnMessageReceived { get; set; }
-        public Action<GenericChatMessage> Global_OnSingleMessageDeleted { get; set; }
-        public Action<GenericChatMessage> Global_OnAllMessagesDeleted { get; set; }
+        public bool IsPluginReady { get; set; } = false;
 
         public void Awake()
         {
@@ -88,7 +78,7 @@ namespace EnhancedStreamChat
             ChatConfig.Instance.ConfigChangedEvent += ChatConfigChanged;
 
             initialized = true;
-            ChatCallbacksReady = true;
+            IsPluginReady = true;
             Plugin.Log("EnhancedStreamChat initialized");
         }
 
@@ -147,7 +137,7 @@ namespace EnhancedStreamChat
             if (!_hasDisplayedTwitchStatus && TwitchWebSocketClient.Initialized)
             {
                 // If the last room id hasn't been set, allow up to a 30 second timeout before we throw an error
-                if (_lastRoomId == String.Empty && (DateTime.Now - TwitchWebSocketClient.ConnectionTime).TotalSeconds < 30)
+                if ((DateTime.Now - TwitchWebSocketClient.ConnectionTime).TotalSeconds < 30)
                 {
                     return;
                 }
@@ -275,35 +265,28 @@ namespace EnhancedStreamChat
                 _hasDisplayedTwitchStatus = false;
             };
 
-            Global_OnMessageReceived += (genericMessage) =>
+            TwitchMessageHandlers.PRIVMSG += (genericMessage) =>
             {
-                if(genericMessage is TwitchMessage)
-                {
-                    var twitchMsg = genericMessage.Twitch;
-                    // Don't show any messages that aren't from the channel in the config
-                    if (twitchMsg.channelName != TwitchLoginConfig.Instance.TwitchChannelName)
-                        return;
+                var twitchMsg = genericMessage.Twitch;
+                // Don't show any messages that aren't from the channel in the config
+                if (twitchMsg.channelName != TwitchLoginConfig.Instance.TwitchChannelName)
+                    return;
 
-                    MessageParser.Parse(new ChatMessage(Utilities.EscapeHTML(twitchMsg.message), twitchMsg));
-                }
-                else if(genericMessage is YouTubeMessage)
-                {
-                    var youTubeMsg = genericMessage.YouTube;
-                    MessageParser.Parse(new ChatMessage(Utilities.EscapeHTML(youTubeMsg.message), youTubeMsg));
-                }
+                MessageParser.Parse(new ChatMessage(Utilities.EscapeHTML(twitchMsg.message), twitchMsg));
             };
 
-            Twitch_OnRoomstateReceived += (twitchMsg, twitchChannel) =>
+            TwitchMessageHandlers.ROOMSTATE += (twitchMsg, twitchChannel) =>
             {
                 if (_lastRoomId != twitchChannel.roomId)
                 {
                     _lastRoomId = twitchChannel.roomId;
                     RenderQueue.Enqueue(new ChatMessage($"Success joining Twitch channel \"{TwitchLoginConfig.Instance.TwitchChannelName}\"", new GenericChatMessage()));
+                    _hasDisplayedTwitchStatus = true;
                     ImageDownloader.Instance.Init();
                 }
             };
-            
-            Twitch_OnUsernoticeReceived += (twitchMsg) =>
+
+            TwitchMessageHandlers.USERNOTICE += (twitchMsg) =>
             {
                 string msgId = String.Empty, systemMsg = String.Empty;
                 foreach (Match t in twitchMsg.tags)
@@ -337,7 +320,7 @@ namespace EnhancedStreamChat
                 }
             };
 
-            Twitch_OnUserstateReceived += (twitchMsg) =>
+            TwitchMessageHandlers.USERSTATE += (twitchMsg) =>
             {
                 if (!(twitchMsg.user.Twitch.isBroadcaster || twitchMsg.user.Twitch.isMod))
                 {
@@ -348,7 +331,7 @@ namespace EnhancedStreamChat
                 }
             };
 
-            Twitch_OnClearchatReceived += (twitchMsg) =>
+            TwitchMessageHandlers.CLEARCHAT += (twitchMsg) =>
             {
                 string userId = "!FULLCLEAR!";
                 foreach (Match t in twitchMsg.tags)
@@ -362,7 +345,7 @@ namespace EnhancedStreamChat
                 PurgeMessagesFromUser(userId);
             };
 
-            Twitch_OnClearmsgReceived += (twitchMsg) =>
+            TwitchMessageHandlers.CLEARMSG += (twitchMsg) =>
             {
                 string msgId = String.Empty;
                 foreach (Match t in twitchMsg.tags)
@@ -375,6 +358,26 @@ namespace EnhancedStreamChat
                 }
                 if (msgId == String.Empty) return;
                 PurgeChatMessageById(msgId);
+            };
+
+            YouTubeMessageHandlers.OnInitialize += () =>
+            {
+                RenderQueue.Enqueue(new ChatMessage("Connecting to YouTube chat...", new GenericChatMessage()));
+            };
+
+            YouTubeMessageHandlers.OnConnectedToLiveChat += (liveBroadcastInfo) =>
+            {
+                RenderQueue.Enqueue(new ChatMessage($"Success joining YouTube channel \"{YouTubeLiveBroadcast.channelName}\"", new GenericChatMessage()));
+                RenderQueue.Enqueue(new ChatMessage($"Current YouTube Broadcast: \"{liveBroadcastInfo.snippet.title}\"", new GenericChatMessage()));
+            };
+
+            YouTubeMessageHandlers.OnMessageReceived += (youTubeMsg) =>
+            {
+                MessageParser.Parse(new ChatMessage(Utilities.EscapeHTML(youTubeMsg.message), youTubeMsg));
+            };
+
+            YouTubeMessageHandlers.OnYouTubeError += (error) => {
+                RenderQueue.Enqueue(new ChatMessage($"<color=#FF0000FF>An unhandled YouTube error occurred. {error}</color>", new GenericChatMessage()));
             };
         }
 
@@ -448,31 +451,68 @@ namespace EnhancedStreamChat
             _testMessage.enabled = false;
         }
 
-        private IEnumerator AddNewChatMessage(string msg, ChatMessage messageInfo)
+        private static readonly Regex _htmlTagRegex = new Regex(@"<(?<Tag>[a-z]+)=?(?<Value>[^>=]+)?>", RegexOptions.Compiled | RegexOptions.Multiline);
+        private IEnumerator AddNewChatMessage(string origMsg, ChatMessage messageInfo)
         {
             _messageRendering = true;
             CustomText currentMessage = null;
 
-            _testMessage.text = msg;
-            _testMessage.cachedTextGenerator.Populate(msg, _testMessage.GetGenerationSettings(_testMessage.rectTransform.rect.size));
+            _testMessage.text = origMsg;
+            _testMessage.cachedTextGenerator.Populate(origMsg, _testMessage.GetGenerationSettings(_testMessage.rectTransform.rect.size));
             yield return null;
 
+            Dictionary<string, string> openTags = new Dictionary<string, string>();
             for (int i = 0; i < _testMessage.cachedTextGenerator.lineCount; i++)
             {
                 int index = ChatConfig.Instance.ReverseChatOrder ? _testMessage.cachedTextGenerator.lineCount - 1 - i : i;
-                msg = _testMessage.text.Substring(_testMessage.cachedTextGenerator.lines[index].startCharIdx);
 
-                if(msg.IsAllWhitespace())
+                string msg;
+                if (index < _testMessage.cachedTextGenerator.lineCount - 1)
+                    msg = _testMessage.text.Substring(_testMessage.cachedTextGenerator.lines[index].startCharIdx, _testMessage.cachedTextGenerator.lines[index + 1].startCharIdx - _testMessage.cachedTextGenerator.lines[index].startCharIdx);
+                else
+                    msg = _testMessage.text.Substring(_testMessage.cachedTextGenerator.lines[index].startCharIdx);
+
+                if (msg.IsAllWhitespace())
                 {
                     continue;
                 }
 
-                if (index < _testMessage.cachedTextGenerator.lineCount - 1)
-                    msg = msg.Substring(0, _testMessage.cachedTextGenerator.lines[index + 1].startCharIdx - _testMessage.cachedTextGenerator.lines[index].startCharIdx);
+                if(openTags.Count > 0)
+                {
+                    foreach(var tag in openTags.ToArray())
+                    {
+                        msg = msg.Insert(0, $"<{tag.Key}{(tag.Value != null? $"={tag.Value}" : "")}>");
+                        var closingTag = $"</{tag.Key}>";
+                        if (msg.Contains(closingTag))
+                        {
+                            openTags.Remove(tag.Key);
+                        }
+                        else
+                        {
+                            msg += closingTag;
+                        }
+                    }
+                }
 
-                // Italicize action messages and make the whole message the color of the users name
-                if (messageInfo.isActionMessage)
-                    msg = $"<i><color={messageInfo.displayColor}>{msg}</color></i>";
+                var matches = _htmlTagRegex.Matches(msg).Cast<Match>().Reverse();
+                foreach (Match m in matches)
+                {
+                    var tag = m.Groups["Tag"].Value;
+                    if (openTags.ContainsKey(tag))
+                        continue;
+
+                    var closingTag = $"</{tag}>";
+                    if (msg.Contains(closingTag))
+                        continue;
+
+                    string value = null;
+                    if (m.Groups["Value"].Success)
+                    {
+                        value = m.Groups["Value"].Value;
+                    }
+                    openTags.Add(tag, value);
+                    msg += closingTag;
+                }
 
                 currentMessage = _chatMessages.Dequeue();
                 currentMessage.hasRendered = false;

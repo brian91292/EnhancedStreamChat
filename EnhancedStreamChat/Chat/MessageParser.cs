@@ -287,11 +287,17 @@ namespace EnhancedStreamChat.Chat
             badgeStr.Append("\u00A0");
             badgeStr.Append(newChatMessage.displayMsg);
 
+            // Italicize action messages and make the whole message the color of the users name
+            if (isActionMessage) {
+                badgeStr.Insert(0, $"<i><color={displayColor}>");
+                badgeStr.Append("</color></i>");
+            }
+
             // Finally, store our final message, parsedEmotes and parsedBadges; then render the message
             newChatMessage.displayMsg = badgeStr.ToString();
             newChatMessage.parsedEmotes = parsedEmotes;
             newChatMessage.parsedBadges = parsedBadges;
-            newChatMessage.isActionMessage = isActionMessage;
+
             ChatHandler.RenderQueue.Enqueue(newChatMessage);
         }
     };
