@@ -195,7 +195,7 @@ namespace EnhancedStreamChat.Config
                     if (text.Contains("TwitchUsername="))
                     {
                         SemiOldConfigOptions semiOldConfigInfo = new SemiOldConfigOptions();
-                        ConfigSerializer.LoadConfig(semiOldConfigInfo, FilePath);
+                        ObjectSerializer.Load(semiOldConfigInfo, FilePath);
 
                         TwitchLoginConfig.Instance.TwitchChannelName = semiOldConfigInfo.TwitchChannelName;
                         TwitchLoginConfig.Instance.TwitchUsername = semiOldConfigInfo.TwitchUsername;
@@ -221,7 +221,7 @@ namespace EnhancedStreamChat.Config
 
         public void Load()
         {
-            ConfigSerializer.LoadConfig(this, FilePath);
+            ObjectSerializer.Load(this, FilePath);
 
             CorrectConfigSettings();
         }
@@ -231,7 +231,7 @@ namespace EnhancedStreamChat.Config
             if (!callback)
                 _saving = true;
 
-            ConfigSerializer.SaveConfig(this, FilePath);
+            ObjectSerializer.Save(this, FilePath);
         }
 
         private void AppendToBlacklist(string path)
@@ -241,7 +241,7 @@ namespace EnhancedStreamChat.Config
             if (text.Contains("SongBlacklist="))
             {
                 var oldConfig = new OldBlacklistOption();
-                ConfigSerializer.LoadConfig(oldConfig, path);
+                ObjectSerializer.Load(oldConfig, path);
 
                 if (oldConfig.SongBlacklist.Length > 0)
                     File.AppendAllText(Path.Combine(Globals.DataPath, "SongBlacklistMigration.list"), oldConfig.SongBlacklist + ",");
