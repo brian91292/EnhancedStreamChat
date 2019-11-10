@@ -69,6 +69,8 @@ namespace EnhancedStreamChat.UI
         public static Material noGlowMaterialUI = null;
         public static Material clearMaterial = null;
         public static readonly string spacingChar = "\u202f";
+        internal static readonly float badgeEmojiHeight = 80f;
+        internal static readonly float emoteHeight = 120f;
         public static float imageSpacingWidth;
 
         public static bool MaterialsCached
@@ -217,21 +219,23 @@ namespace EnhancedStreamChat.UI
                         image = ChatHandler.Instance.imagePool.Alloc();
                         image.spriteIndex = imageInfo.textureIndex;
                         image.imageType = imageInfo.imageType;
-                        image.rectTransform.pivot = new Vector2(0, 0);
                         image.sprite = cachedTextureData.sprite;
                         image.preserveAspect = false;
                         if(image.sprite)
                             image.sprite.texture.wrapMode = TextureWrapMode.Clamp;
                         
                         image.rectTransform.SetParent(currentMessage.rectTransform, false);
-
-                        //float aspectRatio = cachedTextureData.aspectRatio;
                         image.rectTransform.localScale = new Vector3(0.064f, 0.064f, 0.064f);
                         image.rectTransform.sizeDelta = new Vector2(cachedTextureData.width, cachedTextureData.height);
 
+                        if(imageInfo.imageType == ImageType.Emoji || imageInfo.imageType == ImageType.Badge)
+                            image.rectTransform.pivot = new Vector2(0, 0.21f);
+                        else
+                            image.rectTransform.pivot = new Vector2(0, 0.3f);
+
                         TextGenerator textGen = currentMessage.cachedTextGenerator;
-                        Vector3 pos = new Vector3(textGen.verts[i * 4 + 3].position.x, textGen.verts[i * 4 + 3].position.y);
-                        image.rectTransform.position = currentMessage.gameObject.transform.TransformPoint(pos / pixelsPerUnit - new Vector3(0, cachedTextureData.height / pixelsPerUnit) + new Vector3(0,0,-0.1f));
+                        Vector3 pos = new Vector3(textGen.verts[i * 4].position.x, textGen.verts[i * 4].position.y);
+                        image.rectTransform.position = currentMessage.gameObject.transform.TransformPoint((pos /*+ new Vector3(0, cachedTextureData.height)*/) / pixelsPerUnit + new Vector3(0,0,-0.1f));
                         //image.rectTransform.localPosition -= new Vector3(imageSpacingWidth/2.3f, 0);
 
                         if (animatedEmote)

@@ -38,6 +38,17 @@ namespace EnhancedStreamChat.Chat
             List<EmoteInfo> parsedEmotes = new List<EmoteInfo>();
             List<BadgeInfo> parsedBadges = new List<BadgeInfo>();
 
+            bool isActionMessage = false;
+            if (newChatMessage.origMessage is TwitchMessage)
+            {
+                // If this is a twitch message, check if they used /me and color it accordingly
+                isActionMessage = newChatMessage.displayMsg.Substring(1).StartsWith("ACTION") && newChatMessage.displayMsg[0] == (char)0x1;
+                if (isActionMessage)
+                {
+                    newChatMessage.displayMsg = newChatMessage.displayMsg.TrimEnd((char)0x1).Substring(8);
+                }
+            }
+
             StringBuilder emojilessMessageBuilder = new StringBuilder(newChatMessage.displayMsg);
             // Parse and download any emojis included in the message
             var matches = EmojiUtilities.GetEmojisInString(newChatMessage.displayMsg);
@@ -76,15 +87,8 @@ namespace EnhancedStreamChat.Chat
                 Thread.Sleep(5);
             }
 
-            bool isActionMessage = false;
             if (newChatMessage.origMessage is TwitchMessage)
             {
-                // If this is a twitch message, check if they used /me and color it accordingly
-                isActionMessage = newChatMessage.displayMsg.Substring(1).StartsWith("ACTION") && newChatMessage.displayMsg[0] == (char)0x1;
-                if (isActionMessage)
-                    newChatMessage.displayMsg = newChatMessage.displayMsg.TrimEnd((char)0x1).Substring(8);
-
-
                 // Parse and download any twitch emotes in the message
                 var emotes = _emoteRegex.Matches(newChatMessage.origMessage.Twitch.emotes);
                 if (emotes.Count > 0)
@@ -98,10 +102,11 @@ namespace EnhancedStreamChat.Chat
 
                         int startReplace = Convert.ToInt32(e.Groups["StartIndex"].Value);
                         int endReplace = Convert.ToInt32(e.Groups["EndIndex"].Value);
+                        string emoteName = emojilessMessage.Substring(startReplace, endReplace - startReplace + 1);
 
                         EmoteInfo swapInfo = new EmoteInfo();
                         swapInfo.swapChar = swapChar;
-                        swapInfo.swapString = emojilessMessage.Substring(startReplace, endReplace - startReplace + 1);
+                        swapInfo.swapString = emoteName;
                         swapInfo.textureIndex = emoteIndex;
                         swapInfo.imageType = ImageType.Twitch;
                         parsedEmotes.Add(swapInfo);
@@ -194,6 +199,8 @@ namespace EnhancedStreamChat.Chat
                         swapChar++;
                     }
                 }
+
+                
                 Thread.Sleep(5);
             }
             else if(newChatMessage.origMessage is YouTubeMessage)
@@ -271,7 +278,7 @@ namespace EnhancedStreamChat.Chat
             newChatMessage.displayColor = displayColor;
 
             // Add the users name to the message with the correct color
-            newChatMessage.displayMsg = $"<color={newChatMessage.displayColor}><b>{newChatMessage.origMessage.user.displayName}</b></color>{(isActionMessage ? String.Empty : ":")} {newChatMessage.displayMsg}";
+            newChatMessage.displayMsg = $"<color={newChatMessage.displayColor}><b>{newChatMessage.origMessage.user.displayName}</b>{(!isActionMessage?"</color>:":"")} {newChatMessage.displayMsg}{(isActionMessage?"</color>":"")}";
 
             // Prepend the users badges to the front of the message
             StringBuilder badgeStr = new StringBuilder();
@@ -281,17 +288,12 @@ namespace EnhancedStreamChat.Chat
                 foreach (BadgeInfo b in parsedBadges)
                 {
                     var cachedSprite = b.GetCachedSprite();
-                    badgeStr.Insert(0, $"\u00A0{Char.ConvertFromUtf32(b.swapChar)}{b.spacingString}");
+                    badgeStr.Insert(0, $"{Char.ConvertFromUtf32(b.swapChar)}{b.spacingString}\u00A0");
                 }
             }
-            badgeStr.Append("\u00A0");
+            badgeStr.Insert(0, "\uFEFF");
             badgeStr.Append(newChatMessage.displayMsg);
 
-            // Italicize action messages and make the whole message the color of the users name
-            if (isActionMessage) {
-                badgeStr.Insert(0, $"<i><color={displayColor}>");
-                badgeStr.Append("</color></i>");
-            }
 
             // Finally, store our final message, parsedEmotes and parsedBadges; then render the message
             newChatMessage.displayMsg = badgeStr.ToString();

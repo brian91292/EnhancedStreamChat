@@ -57,15 +57,39 @@ namespace EnhancedStreamChat.Textures
             }
         }
 
-        public CachedSpriteData(CachedAnimationData animInfo, float width, float height)
+        public CachedSpriteData(ImageType type, CachedAnimationData animInfo, float width, float height)
         {
+            float size = Drawing.emoteHeight;
+            if (type == ImageType.Badge || type == ImageType.Emoji)
+            {
+                size = Drawing.badgeEmojiHeight;
+            }
+            // Adjust the texture width/height if it's not the correct height
+            if (height != size)
+            {
+                float div = height / size;
+                width /= div;
+                height = size;
+            }
             this.animInfo = animInfo;
             this.width = width;
             this.height = height;
         }
 
-        public CachedSpriteData(Sprite sprite, float width, float height)
+        public CachedSpriteData(ImageType type, Sprite sprite, float width, float height)
         {
+            float size = Drawing.emoteHeight;
+            if (type == ImageType.Badge || type == ImageType.Emoji)
+            {
+                size = Drawing.badgeEmojiHeight;
+            }
+            // Adjust the texture width/height if it's not the correct height
+            if (height != size)
+            {
+                float div = height / size;
+                width /= div;
+                height = size;
+            }
             this.sprite = sprite;
             this.width = width;
             this.height = height;
@@ -289,7 +313,7 @@ namespace EnhancedStreamChat.Textures
 
                 if (sprite)
                 {
-                    CachedTextures.TryAdd(imageDownloadInfo.spriteIndex, new CachedSpriteData(sprite, sprite.texture.width, sprite.texture.height));
+                    CachedTextures.TryAdd(imageDownloadInfo.spriteIndex, new CachedSpriteData(imageDownloadInfo.type, sprite, sprite.texture.width, sprite.texture.height));
                     yield return null;
                     ChatHandler.Instance.OverlayImage(sprite, imageDownloadInfo);
                 }
