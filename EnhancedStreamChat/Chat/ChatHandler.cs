@@ -93,7 +93,6 @@ namespace EnhancedStreamChat
                 Plugin.Log("Failed to get VRPointer!");
                 return;
             }
-            
             var _vrPointer = to.name != "GameCore" ? vrPointers.First() : vrPointers.Last();
             if (_movePointer)
                 Destroy(_movePointer);
@@ -557,19 +556,16 @@ namespace EnhancedStreamChat
                 {
                     if (currentMessage.messageInfo == null || !currentMessage.hasRendered) continue;
 
-                    if (!spriteIndex.StartsWith("AB"))
+                    foreach (EmoteInfo e in currentMessage.messageInfo.parsedEmotes)
                     {
-                        foreach (EmoteInfo e in currentMessage.messageInfo.parsedEmotes)
-                        {
-                            if (e.textureIndex == spriteIndex)
-                                Drawing.OverlayImage(currentMessage, e);
-                        }
+                        if (e.textureIndex == spriteIndex)
+                            Drawing.OverlayImage(currentMessage, e);
+                    }
 
-                        foreach (BadgeInfo b in currentMessage.messageInfo.parsedBadges)
-                        {
-                            if (b.textureIndex == spriteIndex)
-                                Drawing.OverlayImage(currentMessage, b);
-                        }
+                    foreach (BadgeInfo b in currentMessage.messageInfo.parsedBadges)
+                    {
+                        if (b.textureIndex == spriteIndex)
+                            Drawing.OverlayImage(currentMessage, b);
                     }
                 }
             }
@@ -579,17 +575,39 @@ namespace EnhancedStreamChat
             }
         }
 
-        public void OverlayAnimatedImage(Texture2D texture, Rect[] uvs, float delay, int width, int height, TextureDownloadInfo imageDownloadInfo)
+        public void OverlayAnimatedImage(Texture2D texture, Rect[] uvs, float[] delays, bool isDelayConsistent, int width, int height, TextureDownloadInfo imageDownloadInfo)
         {
             try
             {
                 string spriteIndex = imageDownloadInfo.spriteIndex;
                 string messageIndex = imageDownloadInfo.messageIndex;
+                var oldAnimInfo = ImageDownloader.CachedTextures[spriteIndex]?.animInfo;
+
+                // Create the shaders which will cycle through our animation texture sheet
+                var animInfo = new CachedAnimationData(uvs.Length > 1 ? AnimationController.Instance.Register(spriteIndex, uvs, delays) : 0, texture, uvs, delays);
+
+                if (uvs.Length > 1)
+                {
+                    var _animMaterial = Instantiate(Drawing.CropMaterial);
+                    _animMaterial.mainTexture = texture;
+                    _animMaterial.SetVector("_CropFactors", new Vector4(uvs[0].x, uvs[0].y, uvs[0].width, uvs[0].height));
+                    animInfo.imageMaterial = _animMaterial;
+
+                    if (ChatConfig.Instance.DrawShadows)
+                    {
+                        var _shadowMaterial = Instantiate(Drawing.CropMaterialColorMultiply);
+                        _shadowMaterial.mainTexture = texture;
+                        _shadowMaterial.SetVector("_CropFactors", new Vector4(uvs[0].x, uvs[0].y, uvs[0].width, uvs[0].height));
+                        _shadowMaterial.SetColor("_Color", Color.black.ColorWithAlpha(0.2f));
+                        _shadowMaterial.renderQueue = 3001;
+                        animInfo.shadowMaterial = _shadowMaterial;
+                    }
+                }
+                ImageDownloader.CachedTextures[spriteIndex] = new CachedSpriteData(imageDownloadInfo.type, animInfo, isDelayConsistent, width, height);
+
                 if (ImageDownloader.CachedTextures.ContainsKey(spriteIndex))
                 {
-                    // If the animated image already exists, check if its only a single frame and replace it with the full animation if so
-                    var animationInfo = ImageDownloader.CachedTextures[spriteIndex]?.animInfo;
-                    if (animationInfo != null && animationInfo.uvs.Length == 1)
+                    if (oldAnimInfo != null && oldAnimInfo.uvs.Length == 1)
                     {
                         foreach (CustomText currentMessage in _chatMessages)
                         {
@@ -605,24 +623,6 @@ namespace EnhancedStreamChat
                         }
                     }
                 }
-
-                // Setup our CachedTextureData and CachedAnimationData, registering the animation if there is more than one uv in the array
-                ImageDownloader.CachedTextures[spriteIndex] = new CachedSpriteData(imageDownloadInfo.type, new CachedAnimationData(uvs.Length > 1 ? AnimationController.Instance.Register(spriteIndex, uvs, delay) : 0, texture, uvs, delay), width, height);
-
-                if (ChatConfig.Instance.DrawShadows)
-                {
-                    var _shadowMaterial = Instantiate(Drawing.CropMaterialColorMultiply);
-                    _shadowMaterial.mainTexture = texture;
-                    _shadowMaterial.SetVector("_CropFactors", new Vector4(uvs[0].x, uvs[0].y, uvs[0].width, uvs[0].height));
-                    _shadowMaterial.SetColor("_Color", Color.black.ColorWithAlpha(0.2f));
-                    _shadowMaterial.renderQueue = 3001;
-                    ImageDownloader.CachedTextures[spriteIndex].animInfo.shadowMaterial = _shadowMaterial;
-                }
-
-                var _animMaterial = Instantiate(Drawing.CropMaterial);
-                _animMaterial.mainTexture = texture;
-                _animMaterial.SetVector("_CropFactors", new Vector4(uvs[0].x, uvs[0].y, uvs[0].width, uvs[0].height));
-                ImageDownloader.CachedTextures[spriteIndex].animInfo.imageMaterial = _animMaterial;
 
                 foreach (CustomText currentMessage in _chatMessages)
                 {
@@ -655,38 +655,45 @@ namespace EnhancedStreamChat
 
         private void PurgeChatMessagesInternal(KeyValuePair<string, bool> messageInfo)
         {
-            bool isUserId = messageInfo.Value;
-            string id = messageInfo.Key;
-
-            if (id == "!FULLCLEAR!" && !ChatConfig.Instance.ClearChatEnabled)
-                return;
-            else if (id != "!FULLCLEAR!" && !ChatConfig.Instance.ClearTimedOutMessages)
-                return;
-            
-            bool purged = false;
-            foreach (CustomText currentMessage in _chatMessages)
+            try
             {
-                if (currentMessage.messageInfo == null) continue;
+                bool isUserId = messageInfo.Value;
+                string id = messageInfo.Key;
 
-                // Handle purging messages by user id or by message id, since both are possible
-                if (id == "!FULLCLEAR!" || (isUserId && currentMessage.messageInfo.origMessage.user.id == id) || (!isUserId && currentMessage.messageInfo.origMessage.id == id))
+                if (id == "!FULLCLEAR!" && !ChatConfig.Instance.ClearChatEnabled)
+                    return;
+                else if (id != "!FULLCLEAR!" && !ChatConfig.Instance.ClearTimedOutMessages)
+                    return;
+
+                bool purged = false;
+                foreach (CustomText currentMessage in _chatMessages)
                 {
-                    string userName = $"<color={currentMessage.messageInfo.displayColor}><b>{currentMessage.messageInfo.origMessage.user.displayName}</b></color>:";
-                    if (currentMessage.text.Contains(userName))
-                        currentMessage.text = $"{userName} <message deleted>";
-                    else
-                        currentMessage.text = "";
+                    if (currentMessage.messageInfo == null) continue;
 
-                    FreeImages(currentMessage);
-                    purged = true;
+                    // Handle purging messages by user id or by message id, since both are possible
+                    if (id == "!FULLCLEAR!" || (isUserId && currentMessage.messageInfo.origMessage.user.id == id) || (!isUserId && currentMessage.messageInfo.origMessage.id == id))
+                    {
+                        string userName = $"<color={currentMessage.messageInfo.displayColor}><b>{currentMessage.messageInfo.origMessage.user.displayName}</b></color>:";
+                        if (currentMessage.text.Contains(userName))
+                            currentMessage.text = $"{userName} <message deleted>";
+                        else
+                            currentMessage.text = "";
+
+                        FreeImages(currentMessage);
+                        purged = true;
+                    }
+                }
+                if (purged)
+                {
+                    if (id == "!FULLCLEAR!")
+                        RenderQueue.Enqueue(new ChatMessage("Chat was cleared by a moderator.", new GenericChatMessage()));
+
+                    UpdateChatUI();
                 }
             }
-            if (purged)
+            catch(Exception ex)
             {
-                if (id == "!FULLCLEAR!")
-                    RenderQueue.Enqueue(new ChatMessage("Chat was cleared by a moderator.", new GenericChatMessage()));
-
-                UpdateChatUI();
+                Plugin.Log($"An unhandled exception occurred while trying to clear chat message. {ex.ToString()}");
             }
         }
 

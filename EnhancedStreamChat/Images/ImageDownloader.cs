@@ -26,18 +26,18 @@ namespace EnhancedStreamChat.Textures
     public class CachedAnimationData
     {
         public int index = -1;
-        public float delay = -1f;
         public Material imageMaterial;
         public Material shadowMaterial;
         public Texture2D textureAtlas;
         public Rect[] uvs = null;
+        public float[] delays = null;
 
-        public CachedAnimationData(int index, Texture2D textureAtlas, Rect[] uvs, float delay)
+        public CachedAnimationData(int index, Texture2D textureAtlas, Rect[] uvs, float[] delays)
         {
             this.index = index;
             this.textureAtlas = textureAtlas;
             this.uvs = uvs;
-            this.delay = delay;
+            this.delays = delays;
         }
     }
 
@@ -47,6 +47,7 @@ namespace EnhancedStreamChat.Textures
         public CachedAnimationData animInfo = null;
         public float width;
         public float height;
+        public bool isDelayConsistent = true;
         public float aspectRatio
         {
             get
@@ -57,7 +58,7 @@ namespace EnhancedStreamChat.Textures
             }
         }
 
-        public CachedSpriteData(ImageType type, CachedAnimationData animInfo, float width, float height)
+        public CachedSpriteData(ImageType type, CachedAnimationData animInfo, bool isDelayConsistent, float width, float height)
         {
             float size = Drawing.emoteHeight;
             if (type == ImageType.Badge || type == ImageType.Emoji)
@@ -74,6 +75,7 @@ namespace EnhancedStreamChat.Textures
             this.animInfo = animInfo;
             this.width = width;
             this.height = height;
+            this.isDelayConsistent = isDelayConsistent;
         }
 
         public CachedSpriteData(ImageType type, Sprite sprite, float width, float height)

@@ -20,13 +20,14 @@ namespace EnhancedStreamChat.Textures
             public List<FrameInfo> frames = new List<FrameInfo>();
             public int frameCount = 0;
             public bool initialized = false;
+            public bool isDelayConsistent = true;
         };
 
         class FrameInfo
         {
             public int width, height;
             public Color32[] colors;
-            public float delay = 0;
+            public int delay = 0;
             public FrameInfo(int width, int height)
             {
                 this.width = width;
@@ -57,7 +58,7 @@ namespace EnhancedStreamChat.Textures
             return Mathf.Max(textureWidth, textureHeight);
         }
 
-        public static IEnumerator Process(byte[] gifData, Action<Texture2D, Rect[], float, int, int, TextureDownloadInfo> callback, TextureDownloadInfo imageDownloadInfo)
+        public static IEnumerator Process(byte[] gifData, Action<Texture2D, Rect[], float[], bool, int, int, TextureDownloadInfo> callback, TextureDownloadInfo imageDownloadInfo)
         {
             Plugin.Log($"Started decoding gif {imageDownloadInfo.spriteIndex}");
 
@@ -70,7 +71,7 @@ namespace EnhancedStreamChat.Textures
 
             int textureSize = 2048, width = 0, height = 0;
             Texture2D texture = null;
-            float delay = -1f;
+            List<float> delays = new List<float>();
             for (int i = 0; i < frameInfo.frameCount; i++)
             {
                 if (frameInfo.frames.Count <= i)
@@ -86,10 +87,9 @@ namespace EnhancedStreamChat.Textures
                 }
 
                 FrameInfo currentFrameInfo = frameInfo.frames[i];
-                if (delay == -1f)
-                    delay = currentFrameInfo.delay;
-                
-                var frameTexture = new Texture2D(currentFrameInfo.width, currentFrameInfo.height);
+                delays.Add(currentFrameInfo.delay);
+
+                var frameTexture = new Texture2D(currentFrameInfo.width, currentFrameInfo.height, TextureFormat.RGBA32, false);
                 frameTexture.wrapMode = TextureWrapMode.Clamp;
                 try
                 {
@@ -110,14 +110,14 @@ namespace EnhancedStreamChat.Textures
                 {
                     width = frameInfo.frames[i].width;
                     height = frameInfo.frames[i].height;
-                    callback?.Invoke(frameTexture, texture.PackTextures(new Texture2D[] { frameTexture }, 2, textureSize, true), delay, width, height, imageDownloadInfo);
+                    callback?.Invoke(frameTexture, texture.PackTextures(new Texture2D[] { frameTexture }, 2, textureSize, true), delays.ToArray(), true, width, height, imageDownloadInfo);
                 }
             }
             Rect[] atlas = texture.PackTextures(texList.ToArray(), 2, textureSize, true);
 
             yield return null;
 
-            callback?.Invoke(texture, atlas, delay, width, height, imageDownloadInfo);
+            callback?.Invoke(texture, atlas, delays.ToArray(), frameInfo.isDelayConsistent, width, height, imageDownloadInfo);
             Plugin.Log($"Finished decoding gif {imageDownloadInfo.spriteIndex}! Elapsed time: {(DateTime.Now - startTime).TotalSeconds} seconds.");
         }
 
@@ -131,19 +131,18 @@ namespace EnhancedStreamChat.Textures
             frameInfo.initialized = true;
 
             int index = 0;
+            int firstDelayValue = -1;
             for (int i = 0; i < frameCount; i++)
             {
                 gifImage.SelectActiveFrame(dimension, i);
                 System.Drawing.Bitmap bitmap = new System.Drawing.Bitmap(gifImage.Width, gifImage.Height);
                 System.Drawing.Graphics.FromImage(bitmap).DrawImage(gifImage, System.Drawing.Point.Empty);
                 LockBitmap frame = new LockBitmap(bitmap);
-                
                 frame.LockBits();
                 FrameInfo currentFrame = new FrameInfo(bitmap.Width, bitmap.Height);
 
                 if (currentFrame.colors == null)
                     currentFrame.colors = new Color32[frame.Height * frame.Width];
-                
                 for (int x = 0; x < frame.Width; x++)
                 {
                     for (int y = 0; y < frame.Height; y++)
@@ -154,11 +153,15 @@ namespace EnhancedStreamChat.Textures
                 }
 
                 int delayPropertyValue = BitConverter.ToInt32(gifImage.GetPropertyItem(20736).Value, index);
-                // If the delay property is 0, assume that it's a 10fps emote
-                if (delayPropertyValue == 0)
-                    delayPropertyValue = 10;
-                
-                currentFrame.delay = (float)delayPropertyValue / 100.0f;
+                if (firstDelayValue == -1)
+                    firstDelayValue = delayPropertyValue;
+
+                if(delayPropertyValue != firstDelayValue)
+                {
+                    frameInfo.isDelayConsistent = false;
+                }
+
+                currentFrame.delay = delayPropertyValue * 10;
                 frameInfo.frames.Add(currentFrame);
                 index += 4;
                 

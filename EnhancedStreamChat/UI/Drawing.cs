@@ -25,6 +25,21 @@ namespace EnhancedStreamChat.UI
         public string spriteIndex;
         public ImageType imageType;
         public Shadow shadow;
+        private Material _material = null;
+        internal bool isShadow = false;
+        public override Material material
+        {
+            get
+            {
+                return base.material;
+            }
+            set
+            {
+                // Only allow setting our custom image material from our own assembly, incase anything else tries to set it so it doensn't break the animation
+                if(Assembly.GetCallingAssembly() == Assembly.GetExecutingAssembly())
+                    base.material = value;
+            }
+        }
         protected override void Awake()
         {
             base.Awake();
@@ -84,6 +99,8 @@ namespace EnhancedStreamChat.UI
                     {
                         noGlowMaterial = Material.Instantiate(material);
                         noGlowMaterialUI = Material.Instantiate(material);
+                        noGlowMaterial.name = "UINoGlow (EnhancedStreamChat)";
+                        noGlowMaterialUI.name = "UINoGlow (EnhancedStreamChat)";
                         ChatHandler.Instance.background.material = Material.Instantiate(material);
                         ChatHandler.Instance.lockButtonImage.material = Material.Instantiate(material);
                         clearMaterial = Material.Instantiate(material);
@@ -223,7 +240,7 @@ namespace EnhancedStreamChat.UI
                         image.preserveAspect = false;
                         if(image.sprite)
                             image.sprite.texture.wrapMode = TextureWrapMode.Clamp;
-                        
+
                         image.rectTransform.SetParent(currentMessage.rectTransform, false);
                         image.rectTransform.localScale = new Vector3(0.064f, 0.064f, 0.064f);
                         image.rectTransform.sizeDelta = new Vector2(cachedTextureData.width, cachedTextureData.height);
@@ -235,8 +252,7 @@ namespace EnhancedStreamChat.UI
 
                         TextGenerator textGen = currentMessage.cachedTextGenerator;
                         Vector3 pos = new Vector3(textGen.verts[i * 4].position.x, textGen.verts[i * 4].position.y);
-                        image.rectTransform.position = currentMessage.gameObject.transform.TransformPoint((pos /*+ new Vector3(0, cachedTextureData.height)*/) / pixelsPerUnit + new Vector3(0,0,-0.1f));
-                        //image.rectTransform.localPosition -= new Vector3(imageSpacingWidth/2.3f, 0);
+                        image.rectTransform.position = currentMessage.gameObject.transform.TransformPoint(pos / pixelsPerUnit + new Vector3(0,0,-0.1f));
 
                         if (animatedEmote)
                         {
