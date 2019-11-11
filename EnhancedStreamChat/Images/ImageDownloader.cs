@@ -25,16 +25,16 @@ namespace EnhancedStreamChat.Textures
 {
     public class CachedAnimationData
     {
-        public int index = -1;
+        public AnimControllerData animData;
         public Material imageMaterial;
         public Material shadowMaterial;
         public Texture2D textureAtlas;
         public Rect[] uvs = null;
         public float[] delays = null;
 
-        public CachedAnimationData(int index, Texture2D textureAtlas, Rect[] uvs, float[] delays)
+        public CachedAnimationData(AnimControllerData animData, Texture2D textureAtlas, Rect[] uvs, float[] delays)
         {
-            this.index = index;
+            this.animData = animData;
             this.textureAtlas = textureAtlas;
             this.uvs = uvs;
             this.delays = delays;

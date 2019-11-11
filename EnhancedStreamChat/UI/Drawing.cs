@@ -25,6 +25,7 @@ namespace EnhancedStreamChat.UI
         public string spriteIndex;
         public ImageType imageType;
         public Shadow shadow;
+        public CachedSpriteData cachedTextureData = null;
         private Material _material = null;
         internal bool isShadow = false;
         public override Material material
@@ -234,6 +235,7 @@ namespace EnhancedStreamChat.UI
                     if (i > 0 && i < currentMessage.text.Count())
                     {
                         image = ChatHandler.Instance.imagePool.Alloc();
+                        image.cachedTextureData = cachedTextureData;
                         image.spriteIndex = imageInfo.textureIndex;
                         image.imageType = imageInfo.imageType;
                         image.sprite = cachedTextureData.sprite;
@@ -256,6 +258,7 @@ namespace EnhancedStreamChat.UI
 
                         if (animatedEmote)
                         {
+                            cachedTextureData.animInfo?.animData?.IncRefs();
                             image.material = cachedTextureData.animInfo.imageMaterial;
                             //image.shadow.enabled = false;
                             if (ChatConfig.Instance.DrawShadows)

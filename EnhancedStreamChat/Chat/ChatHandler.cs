@@ -401,6 +401,7 @@ namespace EnhancedStreamChat
                 {
                     image.material = null;
                     image.enabled = false;
+                    image.cachedTextureData.animInfo?.animData?.DecRefs();
                 })
             );
 
@@ -584,7 +585,7 @@ namespace EnhancedStreamChat
                 var oldAnimInfo = ImageDownloader.CachedTextures[spriteIndex]?.animInfo;
 
                 // Create the shaders which will cycle through our animation texture sheet
-                var animInfo = new CachedAnimationData(uvs.Length > 1 ? AnimationController.Instance.Register(spriteIndex, uvs, delays) : 0, texture, uvs, delays);
+                var animInfo = new CachedAnimationData(uvs.Length > 1 ? AnimationController.Instance.Register(spriteIndex, uvs, delays) : new AnimControllerData(spriteIndex, uvs, delays), texture, uvs, delays);
 
                 if (uvs.Length > 1)
                 {

@@ -10,13 +10,42 @@ using UnityEngine.XR;
 
 namespace EnhancedStreamChat.Textures
 {
-    class AnimControllerData
+    public class AnimControllerData
     {
         public string textureIndex;
         public int uvIndex = 0;
-        public DateTime lastSwitch = DateTime.Now;
+        public DateTime lastSwitch = DateTime.UtcNow;
         public Rect[] uvs;
         public float[] delays;
+        private int _refCtr = 0;
+        public int RefCtr {
+            get 
+            {
+                return _refCtr;
+            }
+        }
+        public void IncRefs()
+        {
+            lock(this)
+            {
+                if (_refCtr == 0)
+                {
+                    uvIndex = 0;
+                    lastSwitch = DateTime.UtcNow;
+                }
+                _refCtr++;
+            }
+        }
+        public void DecRefs()
+        {
+            lock(this)
+            {
+                _refCtr--;
+                if (_refCtr < 0)
+                    _refCtr = 0;
+            }
+        }
+
         public AnimControllerData(string textureIndex, Rect[] uvs, float[] delays)
         {
             this.textureIndex = textureIndex;
@@ -42,11 +71,11 @@ namespace EnhancedStreamChat.Textures
             DontDestroyOnLoad(gameObject);
         }
 
-        public int Register(string textureIndex, Rect[] uvs, float[] delays)
+        public AnimControllerData Register(string textureIndex, Rect[] uvs, float[] delays)
         {
             AnimControllerData newAnim = new AnimControllerData(textureIndex, uvs, delays);
             registeredAnimations.Add(newAnim);
-            return registeredAnimations.IndexOf(newAnim);
+            return newAnim;
         }
 
         private void CheckFrame(AnimControllerData animation, DateTime now)
@@ -54,16 +83,24 @@ namespace EnhancedStreamChat.Textures
             var difference = now - animation.lastSwitch;
             if (difference.Milliseconds < animation.delays[animation.uvIndex])
             {
+                // Frame still has time remaining
                 return;
             }
 
             var cachedTextureData = ImageDownloader.CachedTextures[animation.textureIndex];
+            if (cachedTextureData.isDelayConsistent && animation.delays[animation.uvIndex] <= 10 && difference.Milliseconds < 100)
+            {
+                // Bump animations with consistently 10ms or lower frame timings to 100ms
+                return;
+            }
+
+
             animation.lastSwitch = now;
             do
             {
                 animation.uvIndex++;
                 if (animation.uvIndex >= animation.uvs.Length)
-                    animation.uvIndex = 0;
+                    animation.uvIndex = 0;                                
             }
             while (!cachedTextureData.isDelayConsistent && animation.delays[animation.uvIndex] == 0);
 
@@ -77,7 +114,8 @@ namespace EnhancedStreamChat.Textures
             var now = DateTime.UtcNow;
             foreach (AnimControllerData animation in registeredAnimations)
             {
-                CheckFrame(animation, now);
+                if(animation.RefCtr > 0)
+                    CheckFrame(animation, now);
             }
         }
     };
