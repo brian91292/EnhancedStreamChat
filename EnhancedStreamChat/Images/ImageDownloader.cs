@@ -161,6 +161,9 @@ namespace EnhancedStreamChat.Textures
             BTTVEmoteIDs.Clear();
             FFZEmoteIDs.Clear();
             TwitchBadgeIDs.Clear();
+            BTTVAnimatedEmoteIDs.Clear();
+            TwitchCheermoteIDs.Clear();
+
             StartCoroutine(GetEmotes());
         }
         
