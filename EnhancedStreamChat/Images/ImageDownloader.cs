@@ -284,7 +284,6 @@ namespace EnhancedStreamChat.Textures
 
                 if (animData != null)
                 {
-                    CachedTextures.TryAdd(imageDownloadInfo.spriteIndex, null);
                     yield return AnimationDecoder.Process(animData, ChatHandler.Instance.OverlayAnimatedImage, imageDownloadInfo);
                     if (!localPathExists && !imageDownloadInfo.noCache)
                         ImageSaveQueue.Enqueue(new TextureSaveInfo(localFilePath, animData));
@@ -360,18 +359,18 @@ namespace EnhancedStreamChat.Textures
                         foreach (JSONNode node in json["actions"].AsArray.Values)
                         {
                             TwitchCheermote cheermote = new TwitchCheermote();
-                            string prefix = node["prefix"].ToString().ToLower();
+                            string prefix = node["prefix"].Value.ToLower();
                             foreach (JSONNode tier in node["tiers"].Values)
                             {
                                 CheermoteTier newTier = new CheermoteTier();
                                 newTier.minBits = tier["min_bits"].AsInt;
-                                newTier.color = tier["color"];
+                                newTier.color = tier["color"].Value;
                                 newTier.canCheer = tier["can_cheer"].AsBool;
                                 cheermote.tiers.Add(newTier);
                             }
                             cheermote.tiers = cheermote.tiers.OrderBy(t => t.minBits).ToList();
-                            TwitchCheermoteIDs.TryAdd(prefix.Substring(1, prefix.Length - 2), cheermote);
-                            //Plugin.Log($"Cheermote: {prefix}");
+                            TwitchCheermoteIDs.TryAdd(prefix, cheermote);
+                            Plugin.Log($"Cheermote: {prefix}");
                             emotesCached++;
                         }
                     }

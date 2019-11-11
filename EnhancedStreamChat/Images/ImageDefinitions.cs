@@ -80,7 +80,7 @@ namespace EnhancedStreamChat.Images
         {
             get
             {
-                if(_cachedSprite == null || (_cachedSprite.sprite == null && _cachedSprite.animInfo == null))
+                if(_cachedSprite == null || (_cachedSprite.sprite == null && (_cachedSprite.animInfo == null || _cachedSprite.animInfo.uvs.Length == 1)))
                     ImageDownloader.CachedTextures.TryGetValue(textureIndex, out _cachedSprite);
                 return _cachedSprite;
             }
@@ -92,11 +92,11 @@ namespace EnhancedStreamChat.Images
             {
                 while (!ImageDownloader.CachedTextures.TryGetValue(textureIndex, out _cachedSprite))
                 {
-                    Thread.Sleep(0);
+                    Thread.Sleep(3);
                 }
                 while (_cachedSprite.sprite == null && _cachedSprite.animInfo == null)
                 {
-                    Thread.Sleep(0);
+                    Thread.Sleep(3);
                 }
             }
             return _cachedSprite;

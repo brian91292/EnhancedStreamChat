@@ -582,44 +582,49 @@ namespace EnhancedStreamChat
             {
                 string spriteIndex = imageDownloadInfo.spriteIndex;
                 string messageIndex = imageDownloadInfo.messageIndex;
-                var oldAnimInfo = ImageDownloader.CachedTextures[spriteIndex]?.animInfo;
-
+                ImageDownloader.CachedTextures.TryGetValue(spriteIndex, out var cachedTex);
+                var oldAnimInfo = cachedTex?.animInfo;
+                   
                 // Create the shaders which will cycle through our animation texture sheet
                 var animInfo = new CachedAnimationData(uvs.Length > 1 ? AnimationController.Instance.Register(spriteIndex, uvs, delays) : new AnimControllerData(spriteIndex, uvs, delays), texture, uvs, delays);
 
+                Material _animMaterial = oldAnimInfo?.imageMaterial;
+                Material _shadowMaterial = oldAnimInfo?.shadowMaterial;
                 if (uvs.Length > 1)
                 {
-                    var _animMaterial = Instantiate(Drawing.CropMaterial);
-                    _animMaterial.mainTexture = texture;
-                    _animMaterial.SetVector("_CropFactors", new Vector4(uvs[0].x, uvs[0].y, uvs[0].width, uvs[0].height));
-                    animInfo.imageMaterial = _animMaterial;
-
-                    if (ChatConfig.Instance.DrawShadows)
+                    if (_animMaterial == null)
                     {
-                        var _shadowMaterial = Instantiate(Drawing.CropMaterialColorMultiply);
+                        _animMaterial = Instantiate(Drawing.CropMaterial);
+                        _animMaterial.mainTexture = texture;
+                        _animMaterial.SetVector("_CropFactors", new Vector4(uvs[0].x, uvs[0].y, uvs[0].width, uvs[0].height));
+                    }
+
+                    if (ChatConfig.Instance.DrawShadows && _shadowMaterial == null)
+                    {
+                        _shadowMaterial = Instantiate(Drawing.CropMaterialColorMultiply);
                         _shadowMaterial.mainTexture = texture;
                         _shadowMaterial.SetVector("_CropFactors", new Vector4(uvs[0].x, uvs[0].y, uvs[0].width, uvs[0].height));
                         _shadowMaterial.SetColor("_Color", Color.black.ColorWithAlpha(0.2f));
                         _shadowMaterial.renderQueue = 3001;
-                        animInfo.shadowMaterial = _shadowMaterial;
                     }
                 }
-                ImageDownloader.CachedTextures[spriteIndex] = new CachedSpriteData(imageDownloadInfo.type, animInfo, isDelayConsistent, width, height);
+                animInfo.imageMaterial = _animMaterial;
+                animInfo.shadowMaterial = _shadowMaterial;
+                var newCachedSpriteData = new CachedSpriteData(imageDownloadInfo.type, animInfo, isDelayConsistent, width, height);
+                ImageDownloader.CachedTextures[spriteIndex] = newCachedSpriteData;
 
-                if (ImageDownloader.CachedTextures.ContainsKey(spriteIndex))
+                if (cachedTex != null && oldAnimInfo != null && oldAnimInfo.uvs.Length == 1)
                 {
-                    if (oldAnimInfo != null && oldAnimInfo.uvs.Length == 1)
+                    foreach (CustomText currentMessage in _chatMessages)
                     {
-                        foreach (CustomText currentMessage in _chatMessages)
+                        for (int i = currentMessage.emoteRenderers.Count - 1; i >= 0; i--)
                         {
-                            for (int i = currentMessage.emoteRenderers.Count - 1; i >= 0; i--)
+                            CustomImage img = currentMessage.emoteRenderers[i];
+                            if (img.spriteIndex == spriteIndex)
                             {
-                                CustomImage img = currentMessage.emoteRenderers[i];
-                                if (img.spriteIndex == spriteIndex)
-                                {
-                                    imagePool.Free(img);
-                                    currentMessage.emoteRenderers.RemoveAt(i);
-                                }
+                                Plugin.Log("Freeing old emote!");
+                                imagePool.Free(img);
+                                currentMessage.emoteRenderers.RemoveAt(i);
                             }
                         }
                     }

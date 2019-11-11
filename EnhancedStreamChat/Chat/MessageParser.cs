@@ -224,10 +224,25 @@ namespace EnhancedStreamChat.Chat
                 string extraInfo = String.Empty;
                 if (e.imageType == ImageType.Cheermote)
                 {
-                    // Insert an animated cheermote into the message
-                    Match cheermote = EmojiUtilities.cheermoteRegex.Match(e.swapString);
-                    string numBits = cheermote.Groups["Value"].Value;
-                    extraInfo = $"\u200A<color={ImageDownloader.TwitchCheermoteIDs[cheermote.Groups["Prefix"].Value].GetColor(Convert.ToInt32(numBits))}>\u200A<size=3><b>{numBits}</b></size></color>\u200A";
+                    try
+                    {
+                        // Insert an animated cheermote into the message
+                        Match cheermote = EmojiUtilities.cheermoteRegex.Match(e.swapString);
+                        if (cheermote.Success)
+                        {
+                            string numBits = cheermote.Groups["Value"].Value;
+                            string prefix = cheermote.Groups["Prefix"].Value.ToLower();
+                            extraInfo = $"\u200A<color={ImageDownloader.TwitchCheermoteIDs[prefix].GetColor(Convert.ToInt32(numBits))}><size=4><b>{numBits}</b></size></color>\u200A";
+                        }
+                        else
+                        {
+                            Plugin.Log($"Cheermote regex failed for message {newChatMessage.origMessage}");
+                        }
+                    }
+                    catch(Exception ex)
+                    {
+                        Plugin.Log($"Failed to parse cheermote! {ex.ToString()}");
+                    }
                 }
 
                 // Replace any instances of the swapString we find in the message

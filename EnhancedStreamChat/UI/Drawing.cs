@@ -26,7 +26,6 @@ namespace EnhancedStreamChat.UI
         public ImageType imageType;
         public Shadow shadow;
         public CachedSpriteData cachedTextureData = null;
-        private Material _material = null;
         internal bool isShadow = false;
         public override Material material
         {
@@ -261,7 +260,7 @@ namespace EnhancedStreamChat.UI
                             cachedTextureData.animInfo?.animData?.IncRefs();
                             image.material = cachedTextureData.animInfo.imageMaterial;
                             //image.shadow.enabled = false;
-                            if (ChatConfig.Instance.DrawShadows)
+                            if (ChatConfig.Instance.DrawShadows && cachedTextureData.animInfo.shadowMaterial != null)
                             {
                                 // Add a shadow to our animated image (the regular unity shadows won't work with this material)
                                 shadow = ChatHandler.Instance.imagePool.Alloc();
