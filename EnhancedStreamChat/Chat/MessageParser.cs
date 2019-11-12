@@ -259,7 +259,7 @@ namespace EnhancedStreamChat.Chat
             foreach (EmoteInfo e in parsedEmotes.Where(e => e.isEmoji))
             {
                 var cachedSprite = e.GetCachedSprite();
-                sb.Replace(e.swapString, $"{Char.ConvertFromUtf32(e.swapChar)}{e.spacingString}");
+                sb.Replace(e.swapString, $"\ufeff{Char.ConvertFromUtf32(e.swapChar)}{e.spacingString}");
             }
             newChatMessage.displayMsg = sb.ToString();
 
