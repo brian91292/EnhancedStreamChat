@@ -583,33 +583,34 @@ namespace EnhancedStreamChat
                 string spriteIndex = imageDownloadInfo.spriteIndex;
                 string messageIndex = imageDownloadInfo.messageIndex;
                 ImageDownloader.CachedTextures.TryGetValue(spriteIndex, out var cachedTex);
-                var oldAnimInfo = cachedTex?.animInfo;
+                CachedAnimationData oldAnimInfo = cachedTex?.animInfo;
                    
                 // Create the shaders which will cycle through our animation texture sheet
                 var animInfo = new CachedAnimationData(uvs.Length > 1 ? AnimationController.Instance.Register(spriteIndex, uvs, delays) : new AnimControllerData(spriteIndex, uvs, delays), texture, uvs, delays);
 
+                // Try to create our animMaterial and shadowMaterial if they don't already exist
                 Material _animMaterial = oldAnimInfo?.imageMaterial;
                 Material _shadowMaterial = oldAnimInfo?.shadowMaterial;
-                if (uvs.Length > 1)
+                if (_animMaterial == null)
                 {
-                    if (_animMaterial == null)
-                    {
-                        _animMaterial = Instantiate(Drawing.CropMaterial);
-                        _animMaterial.mainTexture = texture;
-                        _animMaterial.SetVector("_CropFactors", new Vector4(uvs[0].x, uvs[0].y, uvs[0].width, uvs[0].height));
-                    }
-
-                    if (ChatConfig.Instance.DrawShadows && _shadowMaterial == null)
+                    _animMaterial = Instantiate(Drawing.CropMaterial);
+                    _animMaterial.SetVector("_CropFactors", new Vector4(uvs[0].x, uvs[0].y, uvs[0].width, uvs[0].height));
+                }
+                if (ChatConfig.Instance.DrawShadows)
+                {
+                    if (_shadowMaterial == null)
                     {
                         _shadowMaterial = Instantiate(Drawing.CropMaterialColorMultiply);
-                        _shadowMaterial.mainTexture = texture;
                         _shadowMaterial.SetVector("_CropFactors", new Vector4(uvs[0].x, uvs[0].y, uvs[0].width, uvs[0].height));
                         _shadowMaterial.SetColor("_Color", Color.black.ColorWithAlpha(0.2f));
                         _shadowMaterial.renderQueue = 3001;
                     }
+                    _shadowMaterial.mainTexture = texture;
+                    animInfo.shadowMaterial = _shadowMaterial;
                 }
+                _animMaterial.mainTexture = texture;
                 animInfo.imageMaterial = _animMaterial;
-                animInfo.shadowMaterial = _shadowMaterial;
+
                 var newCachedSpriteData = new CachedSpriteData(imageDownloadInfo.type, animInfo, isDelayConsistent, width, height);
                 ImageDownloader.CachedTextures[spriteIndex] = newCachedSpriteData;
 

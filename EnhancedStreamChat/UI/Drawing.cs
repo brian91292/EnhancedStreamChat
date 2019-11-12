@@ -259,7 +259,6 @@ namespace EnhancedStreamChat.UI
                         {
                             cachedTextureData.animInfo?.animData?.IncRefs();
                             image.material = cachedTextureData.animInfo.imageMaterial;
-                            //image.shadow.enabled = false;
                             if (ChatConfig.Instance.DrawShadows && cachedTextureData.animInfo.shadowMaterial != null)
                             {
                                 // Add a shadow to our animated image (the regular unity shadows won't work with this material)
@@ -273,14 +272,13 @@ namespace EnhancedStreamChat.UI
                                 shadow.rectTransform.SetParent(currentMessage.rectTransform, false);
                                 shadow.rectTransform.position = image.rectTransform.position;
                                 shadow.rectTransform.localPosition += new Vector3(0.6f, -0.6f, 0.05f);
-
                                 shadow.enabled = true;
                                 currentMessage.emoteRenderers.Add(shadow);
                             }
                         }
                         else
                         {
-                            image.material = Drawing.noGlowMaterialUI;
+                            image.material = noGlowMaterialUI;
                             if (ChatConfig.Instance.DrawShadows)
                                 image.shadow.enabled = true;
                         }
