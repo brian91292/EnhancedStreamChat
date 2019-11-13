@@ -464,8 +464,7 @@ namespace EnhancedStreamChat
             CustomText currentMessage = null;
 
             _testMessage.text = origMsg;
-            _testMessage.cachedTextGenerator.Populate(origMsg, _testMessage.GetGenerationSettings(_testMessage.rectTransform.rect.size));
-            yield return null;
+            _testMessage.cachedTextGenerator.Populate(_testMessage.text, _testMessage.GetGenerationSettings(_testMessage.rectTransform.rect.size));
 
             Dictionary<string, string> openTags = new Dictionary<string, string>();
             for (int i = 0; i < _testMessage.cachedTextGenerator.lineCount; i++)
@@ -528,15 +527,7 @@ namespace EnhancedStreamChat
                 currentMessage.color = ChatConfig.Instance.TextColor;
                 _chatMessages.Enqueue(currentMessage);
 
-                FreeImages(currentMessage);
                 UpdateChatUI();
-                yield return null;
-
-                foreach (BadgeInfo b in messageInfo.parsedBadges)
-                    Drawing.OverlayImage(currentMessage, b);
-
-                foreach (EmoteInfo e in messageInfo.parsedEmotes)
-                    Drawing.OverlayImage(currentMessage, e);
 
                 currentMessage.hasRendered = true;
 
@@ -549,31 +540,6 @@ namespace EnhancedStreamChat
 
         public void OverlayImage(Sprite sprite, TextureDownloadInfo imageDownloadInfo)
         {
-            try
-            {
-                string spriteIndex = imageDownloadInfo.spriteIndex;
-                string messageIndex = imageDownloadInfo.messageIndex;
-                foreach (CustomText currentMessage in _chatMessages)
-                {
-                    if (currentMessage.messageInfo == null || !currentMessage.hasRendered) continue;
-
-                    foreach (EmoteInfo e in currentMessage.messageInfo.parsedEmotes)
-                    {
-                        if (e.textureIndex == spriteIndex)
-                            Drawing.OverlayImage(currentMessage, e);
-                    }
-
-                    foreach (BadgeInfo b in currentMessage.messageInfo.parsedBadges)
-                    {
-                        if (b.textureIndex == spriteIndex)
-                            Drawing.OverlayImage(currentMessage, b);
-                    }
-                }
-            }
-            catch (Exception e)
-            {
-                Plugin.Log($"Exception when overlaying emote! {e.ToString()}");
-            }
         }
 
         public void OverlayAnimatedImage(Texture2D texture, Rect[] uvs, float[] delays, bool isDelayConsistent, int width, int height, TextureDownloadInfo imageDownloadInfo)
@@ -612,35 +578,8 @@ namespace EnhancedStreamChat
                 animInfo.imageMaterial = _animMaterial;
 
                 var newCachedSpriteData = new CachedSpriteData(imageDownloadInfo.type, animInfo, isDelayConsistent, width, height);
+                EnhancedText.EnhancedText.RegisterMaterial(imageDownloadInfo.spriteIndex, _animMaterial, width, height, 1.0f);
                 ImageDownloader.CachedTextures[spriteIndex] = newCachedSpriteData;
-
-                if (cachedTex != null && oldAnimInfo != null && oldAnimInfo.uvs.Length == 1)
-                {
-                    foreach (CustomText currentMessage in _chatMessages)
-                    {
-                        for (int i = currentMessage.emoteRenderers.Count - 1; i >= 0; i--)
-                        {
-                            CustomImage img = currentMessage.emoteRenderers[i];
-                            if (img.spriteIndex == spriteIndex)
-                            {
-                                Plugin.Log("Freeing old emote!");
-                                imagePool.Free(img);
-                                currentMessage.emoteRenderers.RemoveAt(i);
-                            }
-                        }
-                    }
-                }
-
-                foreach (CustomText currentMessage in _chatMessages)
-                {
-                    if (currentMessage.messageInfo == null || !currentMessage.hasRendered) continue;
-
-                    foreach (EmoteInfo e in currentMessage.messageInfo.parsedEmotes)
-                    {
-                        if (e.textureIndex == spriteIndex)
-                            Drawing.OverlayImage(currentMessage, e);
-                    }
-                }
             }
             catch (Exception e)
             {
@@ -655,8 +594,6 @@ namespace EnhancedStreamChat
                 currentMessage.text = $"{userName} <message deleted>";
             else
                 currentMessage.text = "";
-
-            FreeImages(currentMessage);
             return true;
         }
 
@@ -686,7 +623,6 @@ namespace EnhancedStreamChat
                         else
                             currentMessage.text = "";
 
-                        FreeImages(currentMessage);
                         purged = true;
                     }
                 }
@@ -712,17 +648,6 @@ namespace EnhancedStreamChat
         public void PurgeMessagesFromUser(string userID)
         {
             _timeoutQueue.Enqueue(new KeyValuePair<string, bool>(userID, true));
-        }
-
-        private void FreeImages(CustomText currentMessage)
-        {
-            if (currentMessage.emoteRenderers.Count > 0)
-            {
-                foreach (CustomImage image in currentMessage.emoteRenderers)
-                    imagePool.Free(image);
-
-                currentMessage.emoteRenderers.Clear();
-            }
         }
 
         private void UpdateChatUI()

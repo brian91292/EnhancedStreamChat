@@ -114,7 +114,7 @@ namespace EnhancedStreamChat.Textures
             var now = DateTime.UtcNow;
             foreach (AnimControllerData animation in registeredAnimations)
             {
-                if(animation.RefCtr > 0)
+                //if(animation.RefCtr > 0)
                     CheckFrame(animation, now);
             }
         }

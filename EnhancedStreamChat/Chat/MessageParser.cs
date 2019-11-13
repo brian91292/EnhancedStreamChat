@@ -246,7 +246,7 @@ namespace EnhancedStreamChat.Chat
                 }
 
                 // Replace any instances of the swapString we find in the message
-                string replaceString = $"\ufeff{Char.ConvertFromUtf32(e.swapChar)}{e.spacingString}{extraInfo}";
+                string replaceString = $"[{e.textureIndex}]{extraInfo}";
                 for (int i = 0; i < parts.Length; i++)
                 {
                     if (parts[i] == e.swapString)
@@ -259,7 +259,7 @@ namespace EnhancedStreamChat.Chat
             foreach (EmoteInfo e in parsedEmotes.Where(e => e.isEmoji))
             {
                 var cachedSprite = e.GetCachedSprite();
-                sb.Replace(e.swapString, $"\ufeff{Char.ConvertFromUtf32(e.swapChar)}{e.spacingString}");
+                sb.Replace(e.swapString, $"[{e.textureIndex}]");
             }
             newChatMessage.displayMsg = sb.ToString();
 
@@ -303,7 +303,7 @@ namespace EnhancedStreamChat.Chat
                 foreach (BadgeInfo b in parsedBadges)
                 {
                     var cachedSprite = b.GetCachedSprite();
-                    badgeStr.Insert(0, $"{Char.ConvertFromUtf32(b.swapChar)}{b.spacingString}\u00A0");
+                    badgeStr.Insert(0, $"[{b.textureIndex}]");
                 }
             }
             badgeStr.Insert(0, "\uFEFF");

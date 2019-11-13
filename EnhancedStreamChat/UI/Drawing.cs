@@ -49,7 +49,7 @@ namespace EnhancedStreamChat.UI
         }
     }
 
-    public class CustomText : Text
+    public class CustomText : EnhancedText.EnhancedText
     {
         public ChatMessage messageInfo;
         public List<CustomImage> emoteRenderers = new List<CustomImage>();

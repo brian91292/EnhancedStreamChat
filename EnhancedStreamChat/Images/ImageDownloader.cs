@@ -285,6 +285,7 @@ namespace EnhancedStreamChat.Textures
                 if (animData != null)
                 {
                     yield return AnimationDecoder.Process(animData, ChatHandler.Instance.OverlayAnimatedImage, imageDownloadInfo);
+
                     if (!localPathExists && !imageDownloadInfo.noCache)
                         ImageSaveQueue.Enqueue(new TextureSaveInfo(localFilePath, animData));
                 }
@@ -317,6 +318,7 @@ namespace EnhancedStreamChat.Textures
 
                 if (sprite)
                 {
+                    EnhancedText.EnhancedText.RegisterSprite(imageDownloadInfo.spriteIndex, sprite, sprite.texture.width, sprite.texture.height, imageDownloadInfo.type == ImageType.Emoji || imageDownloadInfo.type == ImageType.Badge ? 0.7f : 1.0f);
                     CachedTextures.TryAdd(imageDownloadInfo.spriteIndex, new CachedSpriteData(imageDownloadInfo.type, sprite, sprite.texture.width, sprite.texture.height));
                     yield return null;
                     ChatHandler.Instance.OverlayImage(sprite, imageDownloadInfo);
