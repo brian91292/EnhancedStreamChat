@@ -15,8 +15,8 @@ namespace EnhancedStreamChat.Chat
         public string displayMsg = String.Empty;
         public string displayColor = "";
         public GenericChatMessage origMessage;
-        public List<EmoteInfo> parsedEmotes = new List<EmoteInfo>();
-        public List<BadgeInfo> parsedBadges = new List<BadgeInfo>();
+        public Dictionary<string, EmoteInfo> parsedEmotes = new Dictionary<string, EmoteInfo>();
+        public Dictionary<string, BadgeInfo> parsedBadges = new Dictionary<string, BadgeInfo>();
 
         public ChatMessage(string msg, GenericChatMessage messageInfo)
         {

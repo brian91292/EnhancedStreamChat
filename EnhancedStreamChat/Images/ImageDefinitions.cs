@@ -124,6 +124,5 @@ namespace EnhancedStreamChat.Images
     public class EmoteInfo : ImageInfo
     {
         public string swapString;
-        public bool isEmoji;
     };
 }

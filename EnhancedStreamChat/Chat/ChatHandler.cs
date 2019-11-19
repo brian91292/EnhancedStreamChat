@@ -21,6 +21,7 @@ using EnhancedStreamChat.Images;
 using StreamCore.YouTube;
 using StreamCore.Twitch;
 using System.Text;
+using System.Diagnostics;
 
 namespace EnhancedStreamChat
 {
@@ -307,7 +308,10 @@ namespace EnhancedStreamChat
                 if (twitchMsg.channelName != TwitchLoginConfig.Instance.TwitchChannelName)
                     return;
 
+                Stopwatch s = Stopwatch.StartNew();
                 MessageParser.Parse(new ChatMessage(Utilities.EscapeHTML(twitchMsg.message), twitchMsg));
+                s.Stop();
+                Plugin.Log($"Message parsing took {s.ElapsedMilliseconds}ms");
             };
 
             TwitchMessageHandlers.USERNOTICE += (twitchMsg) =>
@@ -532,10 +536,10 @@ namespace EnhancedStreamChat
                 UpdateChatUI();
                 yield return null;
 
-                foreach (BadgeInfo b in messageInfo.parsedBadges)
+                foreach (BadgeInfo b in messageInfo.parsedBadges.Values)
                     Drawing.OverlayImage(currentMessage, b);
 
-                foreach (EmoteInfo e in messageInfo.parsedEmotes)
+                foreach (EmoteInfo e in messageInfo.parsedEmotes.Values)
                     Drawing.OverlayImage(currentMessage, e);
 
                 currentMessage.hasRendered = true;
@@ -557,13 +561,13 @@ namespace EnhancedStreamChat
                 {
                     if (currentMessage.messageInfo == null || !currentMessage.hasRendered) continue;
 
-                    foreach (EmoteInfo e in currentMessage.messageInfo.parsedEmotes)
+                    foreach (EmoteInfo e in currentMessage.messageInfo.parsedEmotes.Values)
                     {
                         if (e.textureIndex == spriteIndex)
                             Drawing.OverlayImage(currentMessage, e);
                     }
 
-                    foreach (BadgeInfo b in currentMessage.messageInfo.parsedBadges)
+                    foreach (BadgeInfo b in currentMessage.messageInfo.parsedBadges.Values)
                     {
                         if (b.textureIndex == spriteIndex)
                             Drawing.OverlayImage(currentMessage, b);
@@ -635,7 +639,7 @@ namespace EnhancedStreamChat
                 {
                     if (currentMessage.messageInfo == null || !currentMessage.hasRendered) continue;
 
-                    foreach (EmoteInfo e in currentMessage.messageInfo.parsedEmotes)
+                    foreach (EmoteInfo e in currentMessage.messageInfo.parsedEmotes.Values)
                     {
                         if (e.textureIndex == spriteIndex)
                             Drawing.OverlayImage(currentMessage, e);

@@ -302,18 +302,27 @@ namespace EnhancedStreamChat.Textures
                 if (imageDownloadInfo.type != ImageType.Emoji)
                 {
                     bool localPathExists = ImageExistsLocally(ref imagePath, imageDownloadInfo, out var localFilePath);
-                    yield return Utilities.Download(imagePath, Utilities.DownloadType.Texture,  null, (web) =>
-                    {
-                        sprite = Utilities.LoadSpriteFromTexture(DownloadHandlerTexture.GetContent(web));
-                        if (sprite)
-                        {
-                            if (!localPathExists && !imageDownloadInfo.noCache)
-                                ImageSaveQueue.Enqueue(new TextureSaveInfo(localFilePath, web.downloadHandler.data));
-                        }
-                    });
+                    yield return Utilities.Download(imagePath, Utilities.DownloadType.Texture, null, (web) =>
+                   {
+                       sprite = Utilities.LoadSpriteFromTexture(DownloadHandlerTexture.GetContent(web));
+                       if (sprite)
+                       {
+                           if (!localPathExists && !imageDownloadInfo.noCache)
+                               ImageSaveQueue.Enqueue(new TextureSaveInfo(localFilePath, web.downloadHandler.data));
+                       }
+                   });
                 }
                 else
-                    sprite = Utilities.LoadSpriteFromResources($"EnhancedStreamChat.Resources.Emojis.{imageDownloadInfo.spriteIndex.ToLower()}");
+                {
+                    try
+                    {
+                        sprite = Utilities.LoadSpriteFromResources($"EnhancedStreamChat.Resources.Emojis.{imageDownloadInfo.spriteIndex.ToLower()}");
+                    }
+                    catch(Exception ex)
+                    {
+                        Plugin.Log($"An error occurred while trying to load emoji from resources. {ex.ToString()}");
+                    }
+                }
 
                 if (sprite)
                 {
