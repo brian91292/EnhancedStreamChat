@@ -666,45 +666,45 @@ namespace EnhancedStreamChat
 
         private void PurgeChatMessagesInternal(KeyValuePair<string, bool> messageInfo)
         {
-            try
+            bool isUserId = messageInfo.Value;
+            string id = messageInfo.Key;
+
+            if (id == "!FULLCLEAR!" && !ChatConfig.Instance.ClearChatEnabled)
+                return;
+            else if (id != "!FULLCLEAR!" && !ChatConfig.Instance.ClearTimedOutMessages)
+                return;
+
+            bool purged = false;
+            foreach (CustomText currentMessage in _chatMessages)
             {
-                bool isUserId = messageInfo.Value;
-                string id = messageInfo.Key;
-
-                if (id == "!FULLCLEAR!" && !ChatConfig.Instance.ClearChatEnabled)
-                    return;
-                else if (id != "!FULLCLEAR!" && !ChatConfig.Instance.ClearTimedOutMessages)
-                    return;
-
-                bool purged = false;
-                foreach (CustomText currentMessage in _chatMessages)
+                try
                 {
                     if (currentMessage.messageInfo == null) continue;
 
-                    // Handle purging messages by user id or by message id, since both are possible
-                    if (id == "!FULLCLEAR!" || (isUserId && currentMessage.messageInfo.origMessage.user.id == id) || (!isUserId && currentMessage.messageInfo.origMessage.id == id))
-                    {
-                        string userName = $"<color={currentMessage.messageInfo.displayColor}><b>{currentMessage.messageInfo.origMessage.user.displayName}</b></color>:";
-                        if (currentMessage.text.Contains(userName))
-                            currentMessage.text = $"{userName} <message deleted>";
-                        else
-                            currentMessage.text = "";
-
-                        FreeImages(currentMessage);
-                        purged = true;
-                    }
-                }
-                if (purged)
+                // Handle purging messages by user id or by message id, since both are possible
+                if (id == "!FULLCLEAR!" || (isUserId && currentMessage?.messageInfo?.origMessage.user.id == id) || (!isUserId && currentMessage?.messageInfo?.origMessage.id == id))
                 {
-                    if (id == "!FULLCLEAR!")
-                        RenderQueue.Enqueue(new ChatMessage("Chat was cleared by a moderator.", new GenericChatMessage()));
+                    string userName = $"<color={currentMessage.messageInfo.displayColor}><b>{currentMessage.messageInfo.origMessage.user.displayName}</b></color>:";
+                    if (currentMessage.text.Contains(userName))
+                        currentMessage.text = $"{userName} <message deleted>";
+                    else
+                        currentMessage.text = "";
 
-                    UpdateChatUI();
+                    FreeImages(currentMessage);
+                    purged = true;
+                }
+                }
+                catch (Exception ex)
+                {
+                    Plugin.Log($"An unhandled exception occurred while trying to clear chat message. {ex.ToString()}");
                 }
             }
-            catch(Exception ex)
+            if (purged)
             {
-                Plugin.Log($"An unhandled exception occurred while trying to clear chat message. {ex.ToString()}");
+                if (id == "!FULLCLEAR!")
+                    RenderQueue.Enqueue(new ChatMessage("Chat was cleared by a moderator.", new GenericChatMessage()));
+
+                UpdateChatUI();
             }
         }
 

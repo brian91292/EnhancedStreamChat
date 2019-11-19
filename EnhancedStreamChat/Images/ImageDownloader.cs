@@ -100,7 +100,7 @@ namespace EnhancedStreamChat.Textures
 
     public class TextureDownloadInfo
     {
-        public string spriteIndex;
+        public string spriteIndex = "";
         public ImageType type;
         public string messageIndex;
         public bool noCache;
@@ -321,6 +321,7 @@ namespace EnhancedStreamChat.Textures
                     catch(Exception ex)
                     {
                         Plugin.Log($"An error occurred while trying to load emoji from resources. {ex.ToString()}");
+                        yield break;
                     }
                 }
 

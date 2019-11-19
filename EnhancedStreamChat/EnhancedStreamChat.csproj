@@ -3240,6 +3240,38 @@
     <EmbeddedResource Include="Resources\Emojis\1fa95.png" />
     <EmbeddedResource Include="Resources\Emojis\26a7.png" />
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\Emojis\1f468-1f3fb-200d-1f91d-200d-1f468-1f3fc.png" />
+    <EmbeddedResource Include="Resources\Emojis\1f468-1f3fb-200d-1f91d-200d-1f468-1f3fd.png" />
+    <EmbeddedResource Include="Resources\Emojis\1f468-1f3fb-200d-1f91d-200d-1f468-1f3fe.png" />
+    <EmbeddedResource Include="Resources\Emojis\1f468-1f3fb-200d-1f91d-200d-1f468-1f3ff.png" />
+    <EmbeddedResource Include="Resources\Emojis\1f468-1f3fc-200d-1f91d-200d-1f468-1f3fd.png" />
+    <EmbeddedResource Include="Resources\Emojis\1f468-1f3fc-200d-1f91d-200d-1f468-1f3fe.png" />
+    <EmbeddedResource Include="Resources\Emojis\1f468-1f3fc-200d-1f91d-200d-1f468-1f3ff.png" />
+    <EmbeddedResource Include="Resources\Emojis\1f468-1f3fd-200d-1f91d-200d-1f468-1f3fe.png" />
+    <EmbeddedResource Include="Resources\Emojis\1f468-1f3fd-200d-1f91d-200d-1f468-1f3ff.png" />
+    <EmbeddedResource Include="Resources\Emojis\1f468-1f3fe-200d-1f91d-200d-1f468-1f3ff.png" />
+    <EmbeddedResource Include="Resources\Emojis\1f469-1f3fb-200d-1f91d-200d-1f469-1f3fc.png" />
+    <EmbeddedResource Include="Resources\Emojis\1f469-1f3fb-200d-1f91d-200d-1f469-1f3fd.png" />
+    <EmbeddedResource Include="Resources\Emojis\1f469-1f3fb-200d-1f91d-200d-1f469-1f3fe.png" />
+    <EmbeddedResource Include="Resources\Emojis\1f469-1f3fb-200d-1f91d-200d-1f469-1f3ff.png" />
+    <EmbeddedResource Include="Resources\Emojis\1f469-1f3fc-200d-1f91d-200d-1f469-1f3fd.png" />
+    <EmbeddedResource Include="Resources\Emojis\1f469-1f3fc-200d-1f91d-200d-1f469-1f3fe.png" />
+    <EmbeddedResource Include="Resources\Emojis\1f469-1f3fc-200d-1f91d-200d-1f469-1f3ff.png" />
+    <EmbeddedResource Include="Resources\Emojis\1f469-1f3fd-200d-1f91d-200d-1f469-1f3fe.png" />
+    <EmbeddedResource Include="Resources\Emojis\1f469-1f3fd-200d-1f91d-200d-1f469-1f3ff.png" />
+    <EmbeddedResource Include="Resources\Emojis\1f469-1f3fe-200d-1f91d-200d-1f469-1f3ff.png" />
+    <EmbeddedResource Include="Resources\Emojis\1f9d1-1f3fb-200d-1f91d-200d-1f9d1-1f3fc.png" />
+    <EmbeddedResource Include="Resources\Emojis\1f9d1-1f3fb-200d-1f91d-200d-1f9d1-1f3fd.png" />
+    <EmbeddedResource Include="Resources\Emojis\1f9d1-1f3fb-200d-1f91d-200d-1f9d1-1f3fe.png" />
+    <EmbeddedResource Include="Resources\Emojis\1f9d1-1f3fb-200d-1f91d-200d-1f9d1-1f3ff.png" />
+    <EmbeddedResource Include="Resources\Emojis\1f9d1-1f3fc-200d-1f91d-200d-1f9d1-1f3fd.png" />
+    <EmbeddedResource Include="Resources\Emojis\1f9d1-1f3fc-200d-1f91d-200d-1f9d1-1f3fe.png" />
+    <EmbeddedResource Include="Resources\Emojis\1f9d1-1f3fc-200d-1f91d-200d-1f9d1-1f3ff.png" />
+    <EmbeddedResource Include="Resources\Emojis\1f9d1-1f3fd-200d-1f91d-200d-1f9d1-1f3fe.png" />
+    <EmbeddedResource Include="Resources\Emojis\1f9d1-1f3fd-200d-1f91d-200d-1f9d1-1f3ff.png" />
+    <EmbeddedResource Include="Resources\Emojis\1f9d1-1f3fe-200d-1f91d-200d-1f9d1-1f3ff.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>copy /Y "$(TargetDir)$(TargetFileName)" "C:\Program Files (x86)\Steam\steamapps\common\Beat Saber\Plugins"
