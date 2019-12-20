@@ -92,11 +92,11 @@ namespace EnhancedStreamChat.Images
             {
                 while (!ImageDownloader.CachedTextures.TryGetValue(textureIndex, out _cachedSprite))
                 {
-                    Thread.Sleep(3);
+                    Thread.Sleep(0);
                 }
                 while (_cachedSprite.sprite == null && _cachedSprite.animInfo == null)
                 {
-                    Thread.Sleep(3);
+                    Thread.Sleep(0);
                 }
             }
             return _cachedSprite;

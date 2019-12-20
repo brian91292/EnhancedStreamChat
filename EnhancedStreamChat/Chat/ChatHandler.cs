@@ -308,10 +308,7 @@ namespace EnhancedStreamChat
                 if (twitchMsg.channelName != TwitchLoginConfig.Instance.TwitchChannelName)
                     return;
 
-                Stopwatch s = Stopwatch.StartNew();
                 MessageParser.Parse(new ChatMessage(Utilities.EscapeHTML(twitchMsg.message), twitchMsg));
-                s.Stop();
-                Plugin.Log($"Message parsing took {s.ElapsedMilliseconds}ms");
             };
 
             TwitchMessageHandlers.USERNOTICE += (twitchMsg) =>
@@ -679,20 +676,20 @@ namespace EnhancedStreamChat
             {
                 try
                 {
-                    if (currentMessage.messageInfo == null) continue;
+                    if (currentMessage?.messageInfo == null) continue;
 
-                // Handle purging messages by user id or by message id, since both are possible
-                if (id == "!FULLCLEAR!" || (isUserId && currentMessage?.messageInfo?.origMessage.user.id == id) || (!isUserId && currentMessage?.messageInfo?.origMessage.id == id))
-                {
-                    string userName = $"<color={currentMessage.messageInfo.displayColor}><b>{currentMessage.messageInfo.origMessage.user.displayName}</b></color>:";
-                    if (currentMessage.text.Contains(userName))
-                        currentMessage.text = $"{userName} <message deleted>";
-                    else
-                        currentMessage.text = "";
+                    // Handle purging messages by user id or by message id, since both are possible
+                    if (id == "!FULLCLEAR!" || (isUserId && currentMessage?.messageInfo?.origMessage.user.id == id) || (!isUserId && currentMessage?.messageInfo?.origMessage.id == id))
+                    {
+                        string userName = $"<color={currentMessage.messageInfo.displayColor}><b>{currentMessage.messageInfo.origMessage.user.displayName}</b></color>:";
+                        if (currentMessage.text.Contains(userName))
+                            currentMessage.text = $"{userName} <message deleted>";
+                        else
+                            currentMessage.text = "";
 
-                    FreeImages(currentMessage);
-                    purged = true;
-                }
+                        FreeImages(currentMessage);
+                        purged = true;
+                    }
                 }
                 catch (Exception ex)
                 {

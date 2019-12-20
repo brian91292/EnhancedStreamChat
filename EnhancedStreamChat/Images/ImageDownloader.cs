@@ -184,7 +184,8 @@ namespace EnhancedStreamChat.Textures
             var waitForEmote = new WaitUntil(() => Instance._imageDownloadQueue.Count > 0);
             while(!Globals.IsApplicationExiting)
             {
-                yield return waitForEmote;
+                if(Instance._imageDownloadQueue.Count == 0)
+                    yield return waitForEmote;
 
                 // Download any images that aren't animated
                 if (Instance._imageDownloadQueue.TryDequeue(out var imageDownloadInfo))
@@ -220,7 +221,9 @@ namespace EnhancedStreamChat.Textures
             var waitForAnimatedEmote = new WaitUntil(() => Instance._animationDownloadQueue.Count > 0);
             while (!Globals.IsApplicationExiting)
             {
-                yield return waitForAnimatedEmote;
+                if(Instance._animationDownloadQueue.Count == 0)
+                    yield return waitForAnimatedEmote;
+
                 // Download animated images separately, so we don't hold up static emotes while processing animations
                 if (Instance._animationDownloadQueue.TryDequeue(out var imageDownloadInfo))
                 {

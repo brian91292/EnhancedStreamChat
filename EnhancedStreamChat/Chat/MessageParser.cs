@@ -125,7 +125,7 @@ namespace EnhancedStreamChat.Chat
                         int startIndex = Convert.ToInt32(e.Groups["StartIndex"].Value);
                         string emoteName = emojilessMessage.Substring(startIndex, Convert.ToInt32(e.Groups["EndIndex"].Value) - startIndex + 1);
 
-                        Plugin.Log($"Emote: {emoteName}");
+                        //Plugin.Log($"Emote: {emoteName}");
 
                         emoteInfo = new EmoteInfo()
                         {
@@ -137,8 +137,8 @@ namespace EnhancedStreamChat.Chat
                         _imageInfoByID[emoteIndex] = emoteInfo;
                         _imageInfoByName[emoteName] = emoteInfo;
                     }
+                    Thread.Sleep(0);
                 }
-                Thread.Sleep(0);
             }
 
             // BTTV/FFZ/cheeremotes
@@ -283,12 +283,12 @@ namespace EnhancedStreamChat.Chat
                         chatMessage.parsedBadges[badgeInfo.textureIndex] = badgeInfo;
 
                         // Prepend the users badges to the front of the message
-                        var cachedSprite = badgeInfo.GetCachedSprite();
+                         var cachedSprite = badgeInfo.GetCachedSprite();
                         messageBuilder.Insert(0, $"{Char.ConvertFromUtf32(badgeInfo.swapChar)}{badgeInfo.spacingString}\u00A0");
                     }
+                    Thread.Sleep(0);
                 }
                 messageBuilder.Insert(0, "\uFEFF");
-                Thread.Sleep(0);
             }
         }
     }
@@ -331,9 +331,9 @@ namespace EnhancedStreamChat.Chat
                 string emojiIndex = EmojiUtilities.WebParseEmojiRegExMatchEvaluator(m);
                 string replaceString = m.Value;
 
-                // Couldn't find a match, don't replace it
+                // Couldn't find a match, replace it with a space
                 if (emojiIndex == String.Empty)
-                    return m.Value;
+                    return " ";
 
                 emojiIndex += ".png";
                 if (!ImageDownloader.CachedTextures.ContainsKey(emojiIndex))

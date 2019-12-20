@@ -176,7 +176,7 @@ namespace EnhancedStreamChat.UI
                 ChatConfig.Instance.Save();
                 Plugin.Log($"Invalid font name specified! Falling back to Segoe UI");
             }
-            return Font.CreateDynamicFontFromOSFont(font, 230);
+            return Font.CreateDynamicFontFromOSFont(font, 10);
         }
 
         public static CustomText InitText(string text, Color textColor, float fontSize, Vector2 sizeDelta, Vector3 position, Quaternion rotation, Transform parent, TextAnchor textAlign, bool wrapText, Material mat = null)
@@ -203,7 +203,7 @@ namespace EnhancedStreamChat.UI
             tmpText.supportRichText = true;
             tmpText.font = LoadSystemFont(ChatConfig.Instance.FontName);
             tmpText.text = text;
-            tmpText.fontSize = 230;
+            tmpText.fontSize = 10;
             tmpText.verticalOverflow = VerticalWrapMode.Overflow;
             tmpText.alignment = textAlign;
             tmpText.horizontalOverflow = HorizontalWrapMode.Wrap;
