@@ -21,7 +21,7 @@ namespace EnhancedStreamChat
     {
         public static readonly string ModuleName = "Enhanced Stream Chat";
         public string Name => ModuleName;
-        public string Version => "2.1.3";
+        public string Version => "2.2.0";
         
         public static Plugin Instance { get; private set; }
 
