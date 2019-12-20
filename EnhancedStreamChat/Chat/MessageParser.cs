@@ -162,7 +162,7 @@ namespace EnhancedStreamChat.Chat
                     string tmpTextureIndex = "";
                     if (ImageDownloader.BTTVEmoteIDs.TryGetValue(word, out tmpTextureIndex))
                     {
-                        if (ChatConfig.Instance.ShowBTTVEmotes)
+                        if (ChatConfig.instance.ShowBTTVEmotes)
                         {
                             textureIndex = $"B{tmpTextureIndex}";
                             imageType = ImageType.BTTV;
@@ -170,7 +170,7 @@ namespace EnhancedStreamChat.Chat
                     }
                     else if (ImageDownloader.BTTVAnimatedEmoteIDs.TryGetValue(word, out tmpTextureIndex))
                     {
-                        if (ChatConfig.Instance.ShowBTTVEmotes)
+                        if (ChatConfig.instance.ShowBTTVEmotes)
                         {
                             textureIndex = $"AB{tmpTextureIndex}";
                             imageType = ImageType.BTTV_Animated;
@@ -178,7 +178,7 @@ namespace EnhancedStreamChat.Chat
                     }
                     else if (ImageDownloader.FFZEmoteIDs.TryGetValue(word, out tmpTextureIndex))
                     {
-                        if (ChatConfig.Instance.ShowFFZEmotes)
+                        if (ChatConfig.instance.ShowFFZEmotes)
                         {
                             textureIndex = $"F{tmpTextureIndex}";
                             imageType = ImageType.FFZ;

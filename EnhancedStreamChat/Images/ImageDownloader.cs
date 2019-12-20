@@ -383,7 +383,7 @@ namespace EnhancedStreamChat.Textures
                             }
                             cheermote.tiers = cheermote.tiers.OrderBy(t => t.minBits).ToList();
                             TwitchCheermoteIDs.TryAdd(prefix, cheermote);
-                            Plugin.Log($"Cheermote: {prefix}");
+                            //Plugin.Log($"Cheermote: {prefix}");
                             emotesCached++;
                         }
                     }

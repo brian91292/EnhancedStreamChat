@@ -45,8 +45,8 @@ namespace EnhancedStreamChat.Chat
                         {
                             _vrController = _vrPointer.vrController;
 
-                            ChatConfig.Instance.LockChatPosition = !ChatConfig.Instance.LockChatPosition;
-                            ChatConfig.Instance.Save();
+                            ChatConfig.instance.LockChatPosition = !ChatConfig.instance.LockChatPosition;
+                            ChatConfig.instance.Save();
                             ChatHandler.Instance.UpdateLockButton();
                         }
                     }

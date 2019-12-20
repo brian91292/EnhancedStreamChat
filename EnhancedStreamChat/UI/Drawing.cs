@@ -69,10 +69,10 @@ namespace EnhancedStreamChat.UI
 
         private void FixedUpdate()
         {
-            if (ChatConfig.Instance.ChatWidth != _width)
+            if (ChatConfig.instance.ChatWidth != _width)
             {
-                _thisElement.preferredWidth = ChatConfig.Instance.ChatWidth;
-                _width = ChatConfig.Instance.ChatWidth;
+                _thisElement.preferredWidth = ChatConfig.instance.ChatWidth;
+                _width = ChatConfig.instance.ChatWidth;
             }
         }
     };
@@ -148,7 +148,7 @@ namespace EnhancedStreamChat.UI
 
         public static IEnumerator Initialize(Transform parent)
         {
-            CustomText tmpText = InitText(spacingChar, Color.clear, ChatConfig.Instance.ChatScale, new Vector2(ChatConfig.Instance.ChatWidth, 1), new Vector3(0, -100, 0), new Quaternion(0, 0, 0, 0), parent, TextAnchor.UpperLeft, false);
+            CustomText tmpText = InitText(spacingChar, Color.clear, ChatConfig.instance.ChatScale, new Vector2(ChatConfig.instance.ChatWidth, 1), new Vector3(0, -100, 0), new Quaternion(0, 0, 0, 0), parent, TextAnchor.UpperLeft, false);
             yield return null;
             imageSpacingWidth = tmpText.preferredWidth;
             //Plugin.Log($"Preferred width was {tmpText.preferredWidth.ToString()} with {tmpText.text.Length.ToString()} spaces");
@@ -172,8 +172,8 @@ namespace EnhancedStreamChat.UI
             if (useFallback)
             {
                 font = "Segoe UI";
-                ChatConfig.Instance.FontName = font;
-                ChatConfig.Instance.Save();
+                ChatConfig.instance.FontName = font;
+                ChatConfig.instance.Save();
                 Plugin.Log($"Invalid font name specified! Falling back to Segoe UI");
             }
             return Font.CreateDynamicFontFromOSFont(font, 10);
@@ -201,7 +201,7 @@ namespace EnhancedStreamChat.UI
             tmpText.rectTransform.pivot = new Vector2(0, 0);
             tmpText.rectTransform.sizeDelta = sizeDelta;
             tmpText.supportRichText = true;
-            tmpText.font = LoadSystemFont(ChatConfig.Instance.FontName);
+            tmpText.font = LoadSystemFont(ChatConfig.instance.FontName);
             tmpText.text = text;
             tmpText.fontSize = 10;
             tmpText.verticalOverflow = VerticalWrapMode.Overflow;
@@ -259,7 +259,7 @@ namespace EnhancedStreamChat.UI
                         {
                             cachedTextureData.animInfo?.animData?.IncRefs();
                             image.material = cachedTextureData.animInfo.imageMaterial;
-                            if (ChatConfig.Instance.DrawShadows && cachedTextureData.animInfo.shadowMaterial != null)
+                            if (ChatConfig.instance.DrawShadows && cachedTextureData.animInfo.shadowMaterial != null)
                             {
                                 // Add a shadow to our animated image (the regular unity shadows won't work with this material)
                                 shadow = ChatHandler.Instance.imagePool.Alloc();
@@ -279,7 +279,7 @@ namespace EnhancedStreamChat.UI
                         else
                         {
                             image.material = noGlowMaterialUI;
-                            if (ChatConfig.Instance.DrawShadows)
+                            if (ChatConfig.instance.DrawShadows)
                                 image.shadow.enabled = true;
                         }
                         image.enabled = true;

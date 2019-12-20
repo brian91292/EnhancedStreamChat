@@ -14,7 +14,6 @@ using EnhancedStreamChat.Config;
 using StreamCore.Chat;
 using StreamCore.Utils;
 using StreamCore.YouTube;
-using CustomUI.Utilities;
 
 namespace EnhancedStreamChat
 {
@@ -40,7 +39,7 @@ namespace EnhancedStreamChat
         {
             if (Instance != null) return;
             Instance = this;
-            ChatConfig = new ChatConfig();
+            ChatConfig = ChatConfig.instance;
 
             SceneManager.activeSceneChanged += SceneManager_activeSceneChanged;
             SceneManager.sceneLoaded += SceneManager_sceneLoaded;
@@ -50,8 +49,7 @@ namespace EnhancedStreamChat
         {
             if (arg0.name == "MenuCore")
             {
-                Settings.OnLoad();
-
+                ChatConfig.OnLoad();
                 ChatConfig.Save(true);
             }
         }
