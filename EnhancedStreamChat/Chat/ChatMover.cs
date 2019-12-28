@@ -34,7 +34,7 @@ namespace EnhancedStreamChat.Chat
         public void Update()
         {
             //Plugin.Log($"ChatMover! VRPointer: {(_vrPointer != null ? "NOT NULL" : "NULL")}");
-            if (ChatConfig.Instance.LockChatPosition) return;
+            if (ChatConfig.instance.LockChatPosition) return;
             if (_vrPointer.vrController != null)
             {
                 if (_vrPointer.vrController.triggerValue > 0.9f)
@@ -44,7 +44,7 @@ namespace EnhancedStreamChat.Chat
                     {
                         if (hit.transform != _moverCube) return;
                         _grabbingController = _vrPointer.vrController;
-                        _grabPos = _vrPointer.vrController.transform.InverseTransformPoint(ChatConfig.Instance.ChatPosition);
+                        _grabPos = _vrPointer.vrController.transform.InverseTransformPoint(ChatConfig.instance.ChatPosition);
                         _grabRot = Quaternion.Inverse(_vrPointer.vrController.transform.rotation) * _moverCube.rotation;
                     }
                 }
@@ -55,7 +55,7 @@ namespace EnhancedStreamChat.Chat
 
         public void LateUpdate()
         {
-            if (ChatConfig.Instance.LockChatPosition) return;
+            if (ChatConfig.instance.LockChatPosition) return;
             if (_grabbingController != null)
             {
                 _wasMoving = true;
@@ -68,12 +68,12 @@ namespace EnhancedStreamChat.Chat
                 _realPos = _grabbingController.transform.TransformPoint(_grabPos);
                 _realRot = _grabbingController.transform.rotation * _grabRot;
 
-                ChatConfig.Instance.ChatPosition = Vector3.Lerp(ChatConfig.Instance.ChatPosition, _realPos, 10 * Time.deltaTime);
-                ChatConfig.Instance.ChatRotation = Quaternion.Slerp(_moverCube.rotation, _realRot, 5 * Time.deltaTime).eulerAngles;
+                ChatConfig.instance.ChatPosition = Vector3.Lerp(ChatConfig.instance.ChatPosition, _realPos, 10 * Time.deltaTime);
+                ChatConfig.instance.ChatRotation = Quaternion.Slerp(_moverCube.rotation, _realRot, 5 * Time.deltaTime).eulerAngles;
             }
             else if (_wasMoving)
             {
-                ChatConfig.Instance.Save();
+                ChatConfig.instance.Save();
                 _wasMoving = false;
             }
         }

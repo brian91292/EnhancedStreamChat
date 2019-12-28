@@ -80,7 +80,7 @@ namespace EnhancedStreamChat.Images
         {
             get
             {
-                if(_cachedSprite == null || (_cachedSprite.sprite == null && _cachedSprite.animInfo == null))
+                if(_cachedSprite == null || (_cachedSprite.sprite == null && (_cachedSprite.animInfo == null || _cachedSprite.animInfo.uvs.Length == 1)))
                     ImageDownloader.CachedTextures.TryGetValue(textureIndex, out _cachedSprite);
                 return _cachedSprite;
             }
@@ -124,6 +124,5 @@ namespace EnhancedStreamChat.Images
     public class EmoteInfo : ImageInfo
     {
         public string swapString;
-        public bool isEmoji;
     };
 }

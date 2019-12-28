@@ -11,6 +11,7 @@ using StreamCore.Config;
 using StreamCore;
 using System.Threading.Tasks;
 using System.Threading;
+using BeatSaberMarkupLanguage.Attributes;
 
 namespace EnhancedStreamChat.Config
 {
@@ -33,20 +34,50 @@ namespace EnhancedStreamChat.Config
         public bool PersistentRequestQueue = true;
     }
     
-    public class ChatConfig
+    public partial class ChatConfig : PersistentSingleton<ChatConfig>
     {
         private string FilePath = Path.Combine(Globals.DataPath, $"{Plugin.ModuleName.Replace(" ", "")}.ini");
 
-
+        // User Interface
+        [UIValue("menu-font-name")]
         public string FontName = "Segoe UI";
-        //public int BombBitValue;
-        //public int TwitchBitBalance;
-
+        [UIValue("chat-scale")]
         public float ChatScale = 1.1f;
+        [UIValue("chat-width")]
         public float ChatWidth = 160;
+        [UIValue("line-spacing")]
         public float LineSpacing = 2.0f;
+        [UIValue("max-chat-lines")]
         public int MaxChatLines = 30;
-        
+        [UIValue("background-padding")]
+        public float BackgroundPadding = 4;
+
+        // Preferences
+        [UIValue("animated-emotes")]
+        public bool AnimatedEmotes = true;
+        [UIValue("draw-shadows")]
+        public bool DrawShadows = false;
+        [UIValue("lock-chat-position")]
+        public bool LockChatPosition = false;
+        [UIValue("reverse-chat-order")]
+        public bool ReverseChatOrder = false;
+        [UIValue("show-bttv-emotes")]
+        public bool ShowBTTVEmotes = true;
+        [UIValue("show-ffz-emotes")]
+        public bool ShowFFZEmotes = true;
+
+        // Filters
+        [UIValue("clear-chat")]
+        public bool ClearChatEnabled = true;
+        [UIValue("timed-out-messages")]
+        public bool ClearTimedOutMessages = true;
+        [UIValue("command-messages")]
+        public bool FilterCommandMessages = false;
+        [UIValue("broadcaster-messages")]
+        public bool FilterBroadcasterMessages = false;
+        [UIValue("self-messages")]
+        public bool FilterSelfMessages = false;
+
         public float PositionX = 0;
         public float PositionY = 2.6f;
         public float PositionZ = 2.3f;
@@ -64,42 +95,12 @@ namespace EnhancedStreamChat.Config
         public float BackgroundColorG = 0;
         public float BackgroundColorB = 0;
         public float BackgroundColorA = 0.6f;
-        public float BackgroundPadding = 4;
-
-        public bool AnimatedEmotes = true;
-        public bool ClearChatEnabled = true;
-        public bool ClearTimedOutMessages = true;
-        public bool DrawShadows = false;
-        public bool LockChatPosition = false;
-        public bool ReverseChatOrder = false;
-        public bool ShowBTTVEmotes = true;
-        public bool ShowFFZEmotes = true;
-
-        public bool FilterCommandMessages = false;
-        public bool FilterBroadcasterMessages = false;
-        public bool FilterSelfMessages = false;
-
       
         public event Action<ChatConfig> ConfigChangedEvent;
 
         private readonly FileSystemWatcher _configWatcher;
         private bool _saving;
 
-        private static ChatConfig _instance = null;
-        public static ChatConfig Instance {
-            get
-            {
-                if (_instance == null)
-                    _instance = new ChatConfig();
-                return _instance;
-            }
-
-            private set
-            {
-                _instance = value;
-            }
-        }
-        
         public Color TextColor
         {
             get
@@ -157,7 +158,6 @@ namespace EnhancedStreamChat.Config
 
         public ChatConfig()
         {
-            Instance = this;
             _configWatcher = new FileSystemWatcher();
             Task.Run(() =>
             {

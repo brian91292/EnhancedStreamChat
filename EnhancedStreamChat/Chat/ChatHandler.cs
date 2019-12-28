@@ -21,6 +21,7 @@ using EnhancedStreamChat.Images;
 using StreamCore.YouTube;
 using StreamCore.Twitch;
 using System.Text;
+using System.Diagnostics;
 
 namespace EnhancedStreamChat
 {
@@ -77,7 +78,7 @@ namespace EnhancedStreamChat
             InitializeChatUI();
 
             // Subscribe to events
-            ChatConfig.Instance.ConfigChangedEvent += ChatConfigChanged;
+            ChatConfig.instance.ConfigChangedEvent += ChatConfigChanged;
 
             initialized = true;
 
@@ -93,7 +94,6 @@ namespace EnhancedStreamChat
                 Plugin.Log("Failed to get VRPointer!");
                 return;
             }
-            
             var _vrPointer = to.name != "GameCore" ? vrPointers.First() : vrPointers.Last();
             if (_movePointer)
                 Destroy(_movePointer);
@@ -115,23 +115,23 @@ namespace EnhancedStreamChat
         private void OnConfigChanged()
         {
             _configChanged = false;
-            if (ChatConfig.Instance.FontName != _lastFontName)
+            if (ChatConfig.instance.FontName != _lastFontName)
             {
                 StartCoroutine(Drawing.Initialize(gameObject.transform));
                 foreach (CustomText currentMessage in _chatMessages)
                 {
                     Font f = currentMessage.font;
-                    currentMessage.font = Drawing.LoadSystemFont(ChatConfig.Instance.FontName);
-                    currentMessage.color = ChatConfig.Instance.TextColor;
+                    currentMessage.font = Drawing.LoadSystemFont(ChatConfig.instance.FontName);
+                    currentMessage.color = ChatConfig.instance.TextColor;
                     Destroy(f);
                 }
-                _lastFontName = ChatConfig.Instance.FontName;
+                _lastFontName = ChatConfig.instance.FontName;
             }
 
             UpdateChatUI();
-            _canvasRectTransform.localScale = new Vector3(0.012f * ChatConfig.Instance.ChatScale, 0.012f * ChatConfig.Instance.ChatScale, 0.012f * ChatConfig.Instance.ChatScale);
-            _lockButtonSphere.localScale = new Vector3(0.15f * ChatConfig.Instance.ChatScale, 0.15f * ChatConfig.Instance.ChatScale, 0.001f * ChatConfig.Instance.ChatScale);
-            background.color = ChatConfig.Instance.BackgroundColor;
+            _canvasRectTransform.localScale = new Vector3(0.012f * ChatConfig.instance.ChatScale, 0.012f * ChatConfig.instance.ChatScale, 0.012f * ChatConfig.instance.ChatScale);
+            _lockButtonSphere.localScale = new Vector3(0.15f * ChatConfig.instance.ChatScale, 0.15f * ChatConfig.instance.ChatScale, 0.001f * ChatConfig.instance.ChatScale);
+            background.color = ChatConfig.instance.BackgroundColor;
         }
 
         private void HandleStatusMessages()
@@ -192,11 +192,11 @@ namespace EnhancedStreamChat
                 {
                     if (RenderQueue.TryDequeue(out var messageToSend))
                     {
-                        if (ChatConfig.Instance.FilterBroadcasterMessages && (messageToSend.origMessage.user.Twitch.isBroadcaster || messageToSend.origMessage.user.YouTube.isChatOwner))
+                        if (ChatConfig.instance.FilterBroadcasterMessages && (messageToSend.origMessage.user.Twitch.isBroadcaster || messageToSend.origMessage.user.YouTube.isChatOwner))
                             return;
-                        if (ChatConfig.Instance.FilterCommandMessages && messageToSend.origMessage.message.StartsWith("!"))
+                        if (ChatConfig.instance.FilterCommandMessages && messageToSend.origMessage.message.StartsWith("!"))
                             return;
-                        if (ChatConfig.Instance.FilterSelfMessages && messageToSend.origMessage.user.id == TwitchWebSocketClient.OurTwitchUser.id)
+                        if (ChatConfig.instance.FilterSelfMessages && messageToSend.origMessage.user.id == TwitchWebSocketClient.OurTwitchUser.id)
                             return;
 
                         if (ChatMessageFilters != null)
@@ -230,19 +230,19 @@ namespace EnhancedStreamChat
         {
             if (Drawing.MaterialsCached)
             {
-                _twitchChatCanvas.transform.eulerAngles = ChatConfig.Instance.ChatRotation;
-                _twitchChatCanvas.transform.position = ChatConfig.Instance.ChatPosition;
-                if (!ChatConfig.Instance.ReverseChatOrder) _twitchChatCanvas.transform.position = _twitchChatCanvas.transform.TransformPoint(new Vector3(0, _currentBackgroundHeight));
+                _twitchChatCanvas.transform.eulerAngles = ChatConfig.instance.ChatRotation;
+                _twitchChatCanvas.transform.position = ChatConfig.instance.ChatPosition;
+                if (!ChatConfig.instance.ReverseChatOrder) _twitchChatCanvas.transform.position = _twitchChatCanvas.transform.TransformPoint(new Vector3(0, _currentBackgroundHeight));
 
-                _chatMoverCube.localScale = background.rectTransform.sizeDelta * (ChatConfig.Instance.ChatScale * 1.2f) / Drawing.pixelsPerUnit;
-                _chatMoverCube.eulerAngles = ChatConfig.Instance.ChatRotation;
+                _chatMoverCube.localScale = background.rectTransform.sizeDelta * (ChatConfig.instance.ChatScale * 1.2f) / Drawing.pixelsPerUnit;
+                _chatMoverCube.eulerAngles = ChatConfig.instance.ChatRotation;
                 _chatMoverCube.position = background.rectTransform.TransformPoint(background.rectTransform.rect.width / 2, _currentBackgroundHeight / 2, 0);
 
                 Vector3[] LocalCorners = new Vector3[4];
                 background.rectTransform.GetLocalCorners(LocalCorners);
-                _lockButtonSphere.eulerAngles = ChatConfig.Instance.ChatRotation;
-                lockButtonImage.rectTransform.eulerAngles = ChatConfig.Instance.ChatRotation;
-                lockButtonImage.rectTransform.position = background.rectTransform.TransformPoint((ChatConfig.Instance.ReverseChatOrder ? LocalCorners[2] : LocalCorners[3]) - new Vector3(lockButtonImage.rectTransform.sizeDelta.x / 2, lockButtonImage.rectTransform.sizeDelta.y / 2));
+                _lockButtonSphere.eulerAngles = ChatConfig.instance.ChatRotation;
+                lockButtonImage.rectTransform.eulerAngles = ChatConfig.instance.ChatRotation;
+                lockButtonImage.rectTransform.position = background.rectTransform.TransformPoint((ChatConfig.instance.ReverseChatOrder ? LocalCorners[2] : LocalCorners[3]) - new Vector3(lockButtonImage.rectTransform.sizeDelta.x / 2, lockButtonImage.rectTransform.sizeDelta.y / 2));
                 _lockButtonSphere.position = lockButtonImage.rectTransform.TransformPoint(new Vector3(lockButtonImage.preferredWidth / Drawing.pixelsPerUnit, lockButtonImage.preferredHeight / Drawing.pixelsPerUnit, 0));
             }
         }
@@ -402,10 +402,11 @@ namespace EnhancedStreamChat
                 {
                     image.material = null;
                     image.enabled = false;
+                    image.cachedTextureData.animInfo?.animData?.DecRefs();
                 })
             );
 
-            _lastFontName = ChatConfig.Instance.FontName;
+            _lastFontName = ChatConfig.instance.FontName;
             StartCoroutine(Drawing.Initialize(gameObject.transform));
 
             _lockedSprite = Utilities.LoadSpriteFromResources("EnhancedStreamChat.Resources.LockedIcon.png");
@@ -419,14 +420,14 @@ namespace EnhancedStreamChat
             var scaler = gameObject.AddComponent<CanvasScaler>();
             scaler.dynamicPixelsPerUnit = Drawing.pixelsPerUnit;
             _canvasRectTransform = _twitchChatCanvas.GetComponent<RectTransform>();
-            _canvasRectTransform.localScale = new Vector3(0.012f * ChatConfig.Instance.ChatScale, 0.012f * ChatConfig.Instance.ChatScale, 0.012f * ChatConfig.Instance.ChatScale);
+            _canvasRectTransform.localScale = new Vector3(0.012f * ChatConfig.instance.ChatScale, 0.012f * ChatConfig.instance.ChatScale, 0.012f * ChatConfig.instance.ChatScale);
 
             background = new GameObject("EnhancedStreamChatBackground").AddComponent<Image>();
             background.rectTransform.SetParent(gameObject.transform, false);
-            background.color = ChatConfig.Instance.BackgroundColor;
+            background.color = ChatConfig.instance.BackgroundColor;
             background.rectTransform.pivot = new Vector2(0, 0);
-            background.rectTransform.sizeDelta = new Vector2(ChatConfig.Instance.ChatWidth + ChatConfig.Instance.BackgroundPadding, 0);
-            background.rectTransform.localPosition = new Vector3(0 - (ChatConfig.Instance.ChatWidth + ChatConfig.Instance.BackgroundPadding) / 2, 0, 0);
+            background.rectTransform.sizeDelta = new Vector2(ChatConfig.instance.ChatWidth + ChatConfig.instance.BackgroundPadding, 0);
+            background.rectTransform.localPosition = new Vector3(0 - (ChatConfig.instance.ChatWidth + ChatConfig.instance.BackgroundPadding) / 2, 0, 0);
 
             var lockButtonGameObj = new GameObject("EnhancedStreamChatLockButton");
             lockButtonImage = lockButtonGameObj.AddComponent<Image>();
@@ -435,7 +436,7 @@ namespace EnhancedStreamChat
             lockButtonImage.rectTransform.SetParent(gameObject.transform, false);
             lockButtonImage.rectTransform.pivot = new Vector2(0, 0);
             lockButtonImage.color = Color.white.ColorWithAlpha(0.05f);
-            lockButtonImage.sprite = ChatConfig.Instance.LockChatPosition ? _lockedSprite : _unlockedSprite;
+            lockButtonImage.sprite = ChatConfig.instance.LockChatPosition ? _lockedSprite : _unlockedSprite;
             lockButtonGameObj.AddComponent<Shadow>();
 
             chatMoverPrimitive = GameObject.CreatePrimitive(PrimitiveType.Cube);
@@ -445,14 +446,14 @@ namespace EnhancedStreamChat
             lockButtonPrimitive = GameObject.CreatePrimitive(PrimitiveType.Sphere);
             UnityEngine.Object.DontDestroyOnLoad(lockButtonPrimitive);
             _lockButtonSphere = lockButtonPrimitive.transform;
-            _lockButtonSphere.localScale = new Vector3(0.15f * ChatConfig.Instance.ChatScale, 0.15f * ChatConfig.Instance.ChatScale, 0.001f);
+            _lockButtonSphere.localScale = new Vector3(0.15f * ChatConfig.instance.ChatScale, 0.15f * ChatConfig.instance.ChatScale, 0.001f);
 
-            while (_chatMessages.Count < ChatConfig.Instance.MaxChatLines)
-                _chatMessages.Enqueue(Drawing.InitText("", Color.clear, ChatConfig.Instance.ChatScale, new Vector2(ChatConfig.Instance.ChatWidth, 1), new Vector3(0, 0, 0), new Quaternion(0, 0, 0, 0), gameObject.transform, TextAnchor.UpperLeft, false));
+            while (_chatMessages.Count < ChatConfig.instance.MaxChatLines)
+                _chatMessages.Enqueue(Drawing.InitText("", Color.clear, ChatConfig.instance.ChatScale, new Vector2(ChatConfig.instance.ChatWidth, 1), new Vector3(0, 0, 0), new Quaternion(0, 0, 0, 0), gameObject.transform, TextAnchor.UpperLeft, false));
 
             var go = new GameObject();
             DontDestroyOnLoad(go);
-            _testMessage = Drawing.InitText("", Color.clear, ChatConfig.Instance.ChatScale, new Vector2(ChatConfig.Instance.ChatWidth, 1), new Vector3(0, 0, 0), new Quaternion(0, 0, 0, 0), go.transform, TextAnchor.UpperLeft, true);
+            _testMessage = Drawing.InitText("", Color.clear, ChatConfig.instance.ChatScale, new Vector2(ChatConfig.instance.ChatWidth, 1), new Vector3(0, 0, 0), new Quaternion(0, 0, 0, 0), go.transform, TextAnchor.UpperLeft, true);
             _testMessage.enabled = false;
         }
 
@@ -470,7 +471,7 @@ namespace EnhancedStreamChat
             Dictionary<string, string> openTags = new Dictionary<string, string>();
             for (int i = 0; i < _testMessage.cachedTextGenerator.lineCount; i++)
             {
-                int index = ChatConfig.Instance.ReverseChatOrder ? _testMessage.cachedTextGenerator.lineCount - 1 - i : i;
+                int index = ChatConfig.instance.ReverseChatOrder ? _testMessage.cachedTextGenerator.lineCount - 1 - i : i;
 
                 string msg;
                 if (index < _testMessage.cachedTextGenerator.lineCount - 1)
@@ -525,17 +526,17 @@ namespace EnhancedStreamChat
                 currentMessage.text = msg;
                 currentMessage.messageInfo = messageInfo;
                 currentMessage.material = Drawing.noGlowMaterialUI;
-                currentMessage.color = ChatConfig.Instance.TextColor;
+                currentMessage.color = ChatConfig.instance.TextColor;
                 _chatMessages.Enqueue(currentMessage);
 
                 FreeImages(currentMessage);
                 UpdateChatUI();
                 yield return null;
 
-                foreach (BadgeInfo b in messageInfo.parsedBadges)
+                foreach (BadgeInfo b in messageInfo.parsedBadges.Values)
                     Drawing.OverlayImage(currentMessage, b);
 
-                foreach (EmoteInfo e in messageInfo.parsedEmotes)
+                foreach (EmoteInfo e in messageInfo.parsedEmotes.Values)
                     Drawing.OverlayImage(currentMessage, e);
 
                 currentMessage.hasRendered = true;
@@ -557,19 +558,16 @@ namespace EnhancedStreamChat
                 {
                     if (currentMessage.messageInfo == null || !currentMessage.hasRendered) continue;
 
-                    if (!spriteIndex.StartsWith("AB"))
+                    foreach (EmoteInfo e in currentMessage.messageInfo.parsedEmotes.Values)
                     {
-                        foreach (EmoteInfo e in currentMessage.messageInfo.parsedEmotes)
-                        {
-                            if (e.textureIndex == spriteIndex)
-                                Drawing.OverlayImage(currentMessage, e);
-                        }
+                        if (e.textureIndex == spriteIndex)
+                            Drawing.OverlayImage(currentMessage, e);
+                    }
 
-                        foreach (BadgeInfo b in currentMessage.messageInfo.parsedBadges)
-                        {
-                            if (b.textureIndex == spriteIndex)
-                                Drawing.OverlayImage(currentMessage, b);
-                        }
+                    foreach (BadgeInfo b in currentMessage.messageInfo.parsedBadges.Values)
+                    {
+                        if (b.textureIndex == spriteIndex)
+                            Drawing.OverlayImage(currentMessage, b);
                     }
                 }
             }
@@ -579,56 +577,66 @@ namespace EnhancedStreamChat
             }
         }
 
-        public void OverlayAnimatedImage(Texture2D texture, Rect[] uvs, float delay, int width, int height, TextureDownloadInfo imageDownloadInfo)
+        public void OverlayAnimatedImage(Texture2D texture, Rect[] uvs, float[] delays, bool isDelayConsistent, int width, int height, TextureDownloadInfo imageDownloadInfo)
         {
             try
             {
                 string spriteIndex = imageDownloadInfo.spriteIndex;
                 string messageIndex = imageDownloadInfo.messageIndex;
-                if (ImageDownloader.CachedTextures.ContainsKey(spriteIndex))
+                ImageDownloader.CachedTextures.TryGetValue(spriteIndex, out var cachedTex);
+                CachedAnimationData oldAnimInfo = cachedTex?.animInfo;
+                   
+                // Create the shaders which will cycle through our animation texture sheet
+                var animInfo = new CachedAnimationData(uvs.Length > 1 ? AnimationController.Instance.Register(spriteIndex, uvs, delays) : new AnimControllerData(spriteIndex, uvs, delays), texture, uvs, delays);
+
+                // Try to create our animMaterial and shadowMaterial if they don't already exist
+                Material _animMaterial = oldAnimInfo?.imageMaterial;
+                Material _shadowMaterial = oldAnimInfo?.shadowMaterial;
+                if (_animMaterial == null)
                 {
-                    // If the animated image already exists, check if its only a single frame and replace it with the full animation if so
-                    var animationInfo = ImageDownloader.CachedTextures[spriteIndex]?.animInfo;
-                    if (animationInfo != null && animationInfo.uvs.Length == 1)
+                    _animMaterial = Instantiate(Drawing.CropMaterial);
+                    _animMaterial.SetVector("_CropFactors", new Vector4(uvs[0].x, uvs[0].y, uvs[0].width, uvs[0].height));
+                }
+                if (ChatConfig.instance.DrawShadows)
+                {
+                    if (_shadowMaterial == null)
                     {
-                        foreach (CustomText currentMessage in _chatMessages)
+                        _shadowMaterial = Instantiate(Drawing.CropMaterialColorMultiply);
+                        _shadowMaterial.SetVector("_CropFactors", new Vector4(uvs[0].x, uvs[0].y, uvs[0].width, uvs[0].height));
+                        _shadowMaterial.SetColor("_Color", Color.black.ColorWithAlpha(0.2f));
+                        _shadowMaterial.renderQueue = 3001;
+                    }
+                    _shadowMaterial.mainTexture = texture;
+                    animInfo.shadowMaterial = _shadowMaterial;
+                }
+                _animMaterial.mainTexture = texture;
+                animInfo.imageMaterial = _animMaterial;
+
+                var newCachedSpriteData = new CachedSpriteData(imageDownloadInfo.type, animInfo, isDelayConsistent, width, height);
+                ImageDownloader.CachedTextures[spriteIndex] = newCachedSpriteData;
+
+                if (cachedTex != null && oldAnimInfo != null && oldAnimInfo.uvs.Length == 1)
+                {
+                    foreach (CustomText currentMessage in _chatMessages)
+                    {
+                        for (int i = currentMessage.emoteRenderers.Count - 1; i >= 0; i--)
                         {
-                            for (int i = currentMessage.emoteRenderers.Count - 1; i >= 0; i--)
+                            CustomImage img = currentMessage.emoteRenderers[i];
+                            if (img.spriteIndex == spriteIndex)
                             {
-                                CustomImage img = currentMessage.emoteRenderers[i];
-                                if (img.spriteIndex == spriteIndex)
-                                {
-                                    imagePool.Free(img);
-                                    currentMessage.emoteRenderers.RemoveAt(i);
-                                }
+                                Plugin.Log("Freeing old emote!");
+                                imagePool.Free(img);
+                                currentMessage.emoteRenderers.RemoveAt(i);
                             }
                         }
                     }
                 }
 
-                // Setup our CachedTextureData and CachedAnimationData, registering the animation if there is more than one uv in the array
-                ImageDownloader.CachedTextures[spriteIndex] = new CachedSpriteData(imageDownloadInfo.type, new CachedAnimationData(uvs.Length > 1 ? AnimationController.Instance.Register(spriteIndex, uvs, delay) : 0, texture, uvs, delay), width, height);
-
-                if (ChatConfig.Instance.DrawShadows)
-                {
-                    var _shadowMaterial = Instantiate(Drawing.CropMaterialColorMultiply);
-                    _shadowMaterial.mainTexture = texture;
-                    _shadowMaterial.SetVector("_CropFactors", new Vector4(uvs[0].x, uvs[0].y, uvs[0].width, uvs[0].height));
-                    _shadowMaterial.SetColor("_Color", Color.black.ColorWithAlpha(0.2f));
-                    _shadowMaterial.renderQueue = 3001;
-                    ImageDownloader.CachedTextures[spriteIndex].animInfo.shadowMaterial = _shadowMaterial;
-                }
-
-                var _animMaterial = Instantiate(Drawing.CropMaterial);
-                _animMaterial.mainTexture = texture;
-                _animMaterial.SetVector("_CropFactors", new Vector4(uvs[0].x, uvs[0].y, uvs[0].width, uvs[0].height));
-                ImageDownloader.CachedTextures[spriteIndex].animInfo.imageMaterial = _animMaterial;
-
                 foreach (CustomText currentMessage in _chatMessages)
                 {
                     if (currentMessage.messageInfo == null || !currentMessage.hasRendered) continue;
 
-                    foreach (EmoteInfo e in currentMessage.messageInfo.parsedEmotes)
+                    foreach (EmoteInfo e in currentMessage.messageInfo.parsedEmotes.Values)
                     {
                         if (e.textureIndex == spriteIndex)
                             Drawing.OverlayImage(currentMessage, e);
@@ -658,27 +666,34 @@ namespace EnhancedStreamChat
             bool isUserId = messageInfo.Value;
             string id = messageInfo.Key;
 
-            if (id == "!FULLCLEAR!" && !ChatConfig.Instance.ClearChatEnabled)
+            if (id == "!FULLCLEAR!" && !ChatConfig.instance.ClearChatEnabled)
                 return;
-            else if (id != "!FULLCLEAR!" && !ChatConfig.Instance.ClearTimedOutMessages)
+            else if (id != "!FULLCLEAR!" && !ChatConfig.instance.ClearTimedOutMessages)
                 return;
-            
+
             bool purged = false;
             foreach (CustomText currentMessage in _chatMessages)
             {
-                if (currentMessage.messageInfo == null) continue;
-
-                // Handle purging messages by user id or by message id, since both are possible
-                if (id == "!FULLCLEAR!" || (isUserId && currentMessage.messageInfo.origMessage.user.id == id) || (!isUserId && currentMessage.messageInfo.origMessage.id == id))
+                try
                 {
-                    string userName = $"<color={currentMessage.messageInfo.displayColor}><b>{currentMessage.messageInfo.origMessage.user.displayName}</b></color>:";
-                    if (currentMessage.text.Contains(userName))
-                        currentMessage.text = $"{userName} <message deleted>";
-                    else
-                        currentMessage.text = "";
+                    if (currentMessage?.messageInfo == null) continue;
 
-                    FreeImages(currentMessage);
-                    purged = true;
+                    // Handle purging messages by user id or by message id, since both are possible
+                    if (id == "!FULLCLEAR!" || (isUserId && currentMessage?.messageInfo?.origMessage.user.id == id) || (!isUserId && currentMessage?.messageInfo?.origMessage.id == id))
+                    {
+                        string userName = $"<color={currentMessage.messageInfo.displayColor}><b>{currentMessage.messageInfo.origMessage.user.displayName}</b></color>:";
+                        if (currentMessage.text.Contains(userName))
+                            currentMessage.text = $"{userName} <message deleted>";
+                        else
+                            currentMessage.text = "";
+
+                        FreeImages(currentMessage);
+                        purged = true;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Plugin.Log($"An unhandled exception occurred while trying to clear chat message. {ex.ToString()}");
                 }
             }
             if (purged)
@@ -722,22 +737,22 @@ namespace EnhancedStreamChat
                 var _tmpArray = _chatMessages.ToArray();
                 for (int i = 0; i < _tmpArray.Length; i++)
                 {
-                    int index = ChatConfig.Instance.ReverseChatOrder ? _tmpArray.Length - 1 - i : i;
+                    int index = ChatConfig.instance.ReverseChatOrder ? _tmpArray.Length - 1 - i : i;
                     if (_tmpArray[index].text != "")
                     {
-                        _tmpArray[index].transform.localPosition = new Vector3(-ChatConfig.Instance.ChatWidth / 2, currentYValue, 0);
-                        currentYValue -= (_tmpArray[index].preferredHeight + (i < _chatMessages.Count() - 1 ? ChatConfig.Instance.LineSpacing + 1.5f : 0));
+                        _tmpArray[index].transform.localPosition = new Vector3(-ChatConfig.instance.ChatWidth / 2, currentYValue, 0);
+                        currentYValue -= (_tmpArray[index].preferredHeight + (i < _chatMessages.Count() - 1 ? ChatConfig.instance.LineSpacing + 1.5f : 0));
                     }
                 }
-                _currentBackgroundHeight = (initialYValue - currentYValue) + ChatConfig.Instance.BackgroundPadding * 2;
-                background.rectTransform.sizeDelta = new Vector2(ChatConfig.Instance.ChatWidth + ChatConfig.Instance.BackgroundPadding * 2, _currentBackgroundHeight);
-                background.rectTransform.position = _twitchChatCanvas.transform.TransformPoint(new Vector3(-ChatConfig.Instance.ChatWidth / 2 - ChatConfig.Instance.BackgroundPadding, (initialYValue - _currentBackgroundHeight + ChatConfig.Instance.BackgroundPadding), 0.1f));
+                _currentBackgroundHeight = (initialYValue - currentYValue) + ChatConfig.instance.BackgroundPadding * 2;
+                background.rectTransform.sizeDelta = new Vector2(ChatConfig.instance.ChatWidth + ChatConfig.instance.BackgroundPadding * 2, _currentBackgroundHeight);
+                background.rectTransform.position = _twitchChatCanvas.transform.TransformPoint(new Vector3(-ChatConfig.instance.ChatWidth / 2 - ChatConfig.instance.BackgroundPadding, (initialYValue - _currentBackgroundHeight + ChatConfig.instance.BackgroundPadding), 0.1f));
             }
         }
 
         public void UpdateLockButton()
         {
-            lockButtonImage.sprite = ChatConfig.Instance.LockChatPosition ? _lockedSprite : _unlockedSprite;
+            lockButtonImage.sprite = ChatConfig.instance.LockChatPosition ? _lockedSprite : _unlockedSprite;
         }
     };
 }

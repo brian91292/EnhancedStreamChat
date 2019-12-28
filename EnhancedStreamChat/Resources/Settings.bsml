@@ -1,0 +1,35 @@
+﻿<settings-container>
+  <string-setting value="twitch-channel-name" text="Twitch Channel Name" hover-hint="The name of the channel you want Enhanced Twitch Chat to monitor"></string-setting>
+  <settings-submenu text="Filters" hover-hint="Enable or disable various chat filters to keep your chat tidy.">
+    <scrollable-settings-container>
+      <clickable-text text="Back" click-event="back"></clickable-text>
+      <bool-setting value="clear-chat" text="Clear Chat" hover-hint="When enabled, the in-game chat will be cleared if a moderator runs the /clear command."></bool-setting>
+      <bool-setting value="timed-out-messages" text="Timed Out Messages" hover-hint="When enabled, timed out messages will be removed from the in-game chat."></bool-setting>
+      <bool-setting value="command-messages" text="Command Messages" hover-hint="When enabled, messages starting with ! will not be displayed in the in-game chat."></bool-setting>
+      <bool-setting value="broadcaster-messages" text="Broadcaster Messages" hover-hint="When enabled, messages from the broadcaster account will not be displayed in the in-game chat."></bool-setting>
+      <bool-setting value="self-messages" text="Self Messages" hover-hint="When enabled, messages from the logged in Twitch account will not be displayed in the in-game chat."></bool-setting>
+    </scrollable-settings-container>
+  </settings-submenu>
+  <settings-submenu text="Preferences" hover-hint="Enable or disable specific chat features.">
+    <scrollable-settings-container>
+      <clickable-text text="Back" click-event="back"></clickable-text>
+      <bool-setting value="animated-emotes" text="Animated Emotes" hover-hint="Enables animated BetterTwitchTV/FrankerFaceZ/Cheermotes in the chat. When disabled, these emotes will still appear but will not be animated."></bool-setting>
+      <bool-setting value="draw-shadows" text="Draw Shadows" hover-hint="When enabled, shadows will be drawn behind the text and emotes/badges."></bool-setting>
+      <bool-setting value="lock-chat-position" text="Lock Chat Position" hover-hint="When enabled, the chat cannot be moved by pointing your controller at it and holding the trigger."></bool-setting>
+      <bool-setting value="reverse-chat-order" text="Reverse Chat Order" hover-hint="Makes the chat scroll from top to bottom instead of bottom to top."></bool-setting>
+      <bool-setting value="show-bttv-emotes" text="Show BTTV Emotes" hover-hint="When enabled, emotes from BetterTwitchTV will be displayed in chat."></bool-setting>
+      <bool-setting value="show-ffz-emotes" text="Show FFZ Emotes" hover-hint="When enabled, emotes from FrankerFaceZ will be displayed in chat."></bool-setting>
+    </scrollable-settings-container>
+  </settings-submenu>
+  <settings-submenu text="User Interface" hover-hint="All settings related to the chat user interface.">
+    <scrollable-settings-container>
+      <clickable-text text="Back" click-event="back"></clickable-text>
+      <string-setting value="menu-font-name" text="Menu Font Name" hover-hint="The name of the system font you want to use for the chat. This can be any font you've installed on your computer!"></string-setting>
+      <slider-setting value="chat-scale" text="Chat Scale" hover-hint="The size of text and emotes in the chat." min="0" max="10" increment="0.1" integer-only="false"></slider-setting>
+      <slider-setting value="chat-width" text="Chat Width" hover-hint="The width of the chat." min="0" max="1000" increment="1" integer-only="false"></slider-setting>
+      <slider-setting value="line-spacing" text="Line Spacing" hover-hint="The amount of vertical space between each line in chat." min="0" max="20" increment="2" integer-only="false"></slider-setting>
+      <slider-setting value="max-chat-lines" text="Max Chat Lines" hover-hint="The maximum number of lines of chat shown at once" min="1" max="100" increment="1" integer-only="true"></slider-setting>
+      <slider-setting value="background-padding" text="Background Padding" hover-hint="The amount of padding to add between the text and the edge of the chat background." min="0" max="20" increment="1" integer-only="false"></slider-setting>
+    </scrollable-settings-container>
+  </settings-submenu>
+</settings-container>

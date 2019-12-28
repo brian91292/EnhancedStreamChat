@@ -25,6 +25,21 @@ namespace EnhancedStreamChat.UI
         public string spriteIndex;
         public ImageType imageType;
         public Shadow shadow;
+        public CachedSpriteData cachedTextureData = null;
+        internal bool isShadow = false;
+        public override Material material
+        {
+            get
+            {
+                return base.material;
+            }
+            set
+            {
+                // Only allow setting our custom image material from our own assembly, incase anything else tries to set it so it doensn't break the animation
+                if(Assembly.GetCallingAssembly() == Assembly.GetExecutingAssembly())
+                    base.material = value;
+            }
+        }
         protected override void Awake()
         {
             base.Awake();
@@ -54,10 +69,10 @@ namespace EnhancedStreamChat.UI
 
         private void FixedUpdate()
         {
-            if (ChatConfig.Instance.ChatWidth != _width)
+            if (ChatConfig.instance.ChatWidth != _width)
             {
-                _thisElement.preferredWidth = ChatConfig.Instance.ChatWidth;
-                _width = ChatConfig.Instance.ChatWidth;
+                _thisElement.preferredWidth = ChatConfig.instance.ChatWidth;
+                _width = ChatConfig.instance.ChatWidth;
             }
         }
     };
@@ -84,6 +99,8 @@ namespace EnhancedStreamChat.UI
                     {
                         noGlowMaterial = Material.Instantiate(material);
                         noGlowMaterialUI = Material.Instantiate(material);
+                        noGlowMaterial.name = "UINoGlow (EnhancedStreamChat)";
+                        noGlowMaterialUI.name = "UINoGlow (EnhancedStreamChat)";
                         ChatHandler.Instance.background.material = Material.Instantiate(material);
                         ChatHandler.Instance.lockButtonImage.material = Material.Instantiate(material);
                         clearMaterial = Material.Instantiate(material);
@@ -131,7 +148,7 @@ namespace EnhancedStreamChat.UI
 
         public static IEnumerator Initialize(Transform parent)
         {
-            CustomText tmpText = InitText(spacingChar, Color.clear, ChatConfig.Instance.ChatScale, new Vector2(ChatConfig.Instance.ChatWidth, 1), new Vector3(0, -100, 0), new Quaternion(0, 0, 0, 0), parent, TextAnchor.UpperLeft, false);
+            CustomText tmpText = InitText(spacingChar, Color.clear, ChatConfig.instance.ChatScale, new Vector2(ChatConfig.instance.ChatWidth, 1), new Vector3(0, -100, 0), new Quaternion(0, 0, 0, 0), parent, TextAnchor.UpperLeft, false);
             yield return null;
             imageSpacingWidth = tmpText.preferredWidth;
             //Plugin.Log($"Preferred width was {tmpText.preferredWidth.ToString()} with {tmpText.text.Length.ToString()} spaces");
@@ -155,11 +172,11 @@ namespace EnhancedStreamChat.UI
             if (useFallback)
             {
                 font = "Segoe UI";
-                ChatConfig.Instance.FontName = font;
-                ChatConfig.Instance.Save();
+                ChatConfig.instance.FontName = font;
+                ChatConfig.instance.Save();
                 Plugin.Log($"Invalid font name specified! Falling back to Segoe UI");
             }
-            return Font.CreateDynamicFontFromOSFont(font, 230);
+            return Font.CreateDynamicFontFromOSFont(font, 10);
         }
 
         public static CustomText InitText(string text, Color textColor, float fontSize, Vector2 sizeDelta, Vector3 position, Quaternion rotation, Transform parent, TextAnchor textAlign, bool wrapText, Material mat = null)
@@ -184,9 +201,9 @@ namespace EnhancedStreamChat.UI
             tmpText.rectTransform.pivot = new Vector2(0, 0);
             tmpText.rectTransform.sizeDelta = sizeDelta;
             tmpText.supportRichText = true;
-            tmpText.font = LoadSystemFont(ChatConfig.Instance.FontName);
+            tmpText.font = LoadSystemFont(ChatConfig.instance.FontName);
             tmpText.text = text;
-            tmpText.fontSize = 230;
+            tmpText.fontSize = 10;
             tmpText.verticalOverflow = VerticalWrapMode.Overflow;
             tmpText.alignment = textAlign;
             tmpText.horizontalOverflow = HorizontalWrapMode.Wrap;
@@ -217,13 +234,14 @@ namespace EnhancedStreamChat.UI
                     if (i > 0 && i < currentMessage.text.Count())
                     {
                         image = ChatHandler.Instance.imagePool.Alloc();
+                        image.cachedTextureData = cachedTextureData;
                         image.spriteIndex = imageInfo.textureIndex;
                         image.imageType = imageInfo.imageType;
                         image.sprite = cachedTextureData.sprite;
                         image.preserveAspect = false;
                         if(image.sprite)
                             image.sprite.texture.wrapMode = TextureWrapMode.Clamp;
-                        
+
                         image.rectTransform.SetParent(currentMessage.rectTransform, false);
                         image.rectTransform.localScale = new Vector3(0.064f, 0.064f, 0.064f);
                         image.rectTransform.sizeDelta = new Vector2(cachedTextureData.width, cachedTextureData.height);
@@ -235,14 +253,13 @@ namespace EnhancedStreamChat.UI
 
                         TextGenerator textGen = currentMessage.cachedTextGenerator;
                         Vector3 pos = new Vector3(textGen.verts[i * 4].position.x, textGen.verts[i * 4].position.y);
-                        image.rectTransform.position = currentMessage.gameObject.transform.TransformPoint((pos /*+ new Vector3(0, cachedTextureData.height)*/) / pixelsPerUnit + new Vector3(0,0,-0.1f));
-                        //image.rectTransform.localPosition -= new Vector3(imageSpacingWidth/2.3f, 0);
+                        image.rectTransform.position = currentMessage.gameObject.transform.TransformPoint(pos / pixelsPerUnit + new Vector3(0,0,-0.1f));
 
                         if (animatedEmote)
                         {
+                            cachedTextureData.animInfo?.animData?.IncRefs();
                             image.material = cachedTextureData.animInfo.imageMaterial;
-                            //image.shadow.enabled = false;
-                            if (ChatConfig.Instance.DrawShadows)
+                            if (ChatConfig.instance.DrawShadows && cachedTextureData.animInfo.shadowMaterial != null)
                             {
                                 // Add a shadow to our animated image (the regular unity shadows won't work with this material)
                                 shadow = ChatHandler.Instance.imagePool.Alloc();
@@ -255,15 +272,14 @@ namespace EnhancedStreamChat.UI
                                 shadow.rectTransform.SetParent(currentMessage.rectTransform, false);
                                 shadow.rectTransform.position = image.rectTransform.position;
                                 shadow.rectTransform.localPosition += new Vector3(0.6f, -0.6f, 0.05f);
-
                                 shadow.enabled = true;
                                 currentMessage.emoteRenderers.Add(shadow);
                             }
                         }
                         else
                         {
-                            image.material = Drawing.noGlowMaterialUI;
-                            if (ChatConfig.Instance.DrawShadows)
+                            image.material = noGlowMaterialUI;
+                            if (ChatConfig.instance.DrawShadows)
                                 image.shadow.enabled = true;
                         }
                         image.enabled = true;
