@@ -8,7 +8,7 @@ Enhanced Stream Chat is a rich text stream chat integration mod (currently suppo
   - This also includes full Unicode Support! This means you can enjoy the chat in any language!
 
 # Dependencies
-Enhanced Twitch Chat depends on [CustomUI](https://github.com/brian91292/BeatSaberCustomUI/releases), and [StreamCore](https://github.com/brian91292/StreamCore/releases). Make sure to install them, or Enhanced Stream Chat won't work!
+Enhanced Twitch Chat depends on [BSML](https://github.com/monkeymanboy/BeatSaberMarkupLanguage), and [StreamCore](https://github.com/brian91292/StreamCore/releases). Make sure to install them, or Enhanced Stream Chat won't work!
   
 # Installation
 Copy EnhancedStreamChat.dll to your Beat Saber\Plugins folder, and install all of its dependencies. That's it!
